@@ -17,7 +17,10 @@ public class VideoTool {
     String primaryFilename;
     String secondaryFilename;
 
-    private BufferedImage readFrame(String imageName){
+    boolean primaryVideoLoaded = false;
+    boolean secondaryVideoLoaded = false;
+
+    private BufferedImage readFrame(String imageName) throws IOException{
         BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 
         try {
@@ -60,7 +63,8 @@ public class VideoTool {
             dataIn.close();
         }catch(IOException e){
             System.out.println("ERROR: " + e.getMessage());
-            System.exit(1);
+            //System.exit(1);
+            throw e;
         }
 
         return img;
@@ -89,7 +93,7 @@ public class VideoTool {
         JPanel controlA = new JPanel();
         controlA.setLayout(null);
         controlA.setBackground(Color.GRAY);
-        controlA.setBounds(20, 10, 270, 80); //probably wider
+        controlA.setBounds(20, 10, 270, 80);
 
         JLabel controlALabel = new JLabel("Action : ");
         controlALabel.setBounds(2, 5, 70, 20);
@@ -122,7 +126,7 @@ public class VideoTool {
 
         //includes displays for primary and secondary video frames and controls B, D
         JPanel framePanel = new JPanel();
-        framePanel.setLayout(new GridBagLayout());
+        framePanel.setLayout(null);
         framePanel.setBackground(Color.BLACK);
         framePanel.setBounds(0, 120, window.getWidth(), height+120);
 
@@ -133,41 +137,193 @@ public class VideoTool {
         secondaryFilename = "datasets/NewYorkCity/NYTwo/NYTwo.avi"; //temp, will get value from action A2
         secondaryFilename = secondaryFilename.substring(0, secondaryFilename.indexOf('.'));
 
-        BufferedImage img1 = readFrame(primaryFilename+"0294.rgb");
-        BufferedImage img2 = readFrame(secondaryFilename+"7562.rgb");
+        BufferedImage img1 = null;
+        BufferedImage img2 = null;
 
+        try {
+            img1 = readFrame(primaryFilename + "0294.rgb");
+            img2 = readFrame(secondaryFilename + "7562.rgb");
+        } catch (IOException e){
+
+        }
+
+        if (img1 != null){
+            primaryVideoLoaded = true;
+        }
+
+        if (img2 != null){
+            secondaryVideoLoaded = true;
+        }
 
 
         JPanel primaryPanel = new JPanel();
-        primaryPanel.setBackground(Color.BLUE);
+        primaryPanel.setLayout(null);
+        primaryPanel.setBackground(Color.BLACK);
+        primaryPanel.setBounds(15, 0, width, height+120);
+
+        JPanel primaryFramePanel = new JPanel();
+        primaryFramePanel.setLayout(null);
+        primaryFramePanel.setBackground(Color.LIGHT_GRAY);
+        primaryFramePanel.setBounds(0, 20, width, height);
 
         JLabel primaryFrame = new JLabel();
-        primaryFrame.setIcon(new ImageIcon(img1));
-        primaryPanel.add(primaryFrame);
+        primaryFrame.setBounds(0, 0, width, height);
+
+        if (primaryVideoLoaded){
+            primaryFrame.setIcon(new ImageIcon(img1));
+        }
+
+        primaryFramePanel.add(primaryFrame);
+        primaryPanel.add(primaryFramePanel);
+
+        Insets buttonInsets = new Insets(0, 0, 0, 0);
+
+        //control B
+        JPanel controlB = new JPanel();
+        controlB.setLayout(null);
+        controlB.setBackground(Color.WHITE);
+        controlB.setBounds(0, height+40, width, 60);
+
+        JButton minus100P = new JButton("-100");
+        minus100P.setBounds(4, 10, 44, 40);
+        minus100P.setMargin(buttonInsets);
+        minus100P.setFont(controlsFont);
+        minus100P.setToolTipText("Go back 100 frames");
+
+        JButton minus10P = new JButton("-10");
+        minus10P.setBounds(52, 10, 44, 40);
+        minus10P.setMargin(buttonInsets);
+        minus10P.setFont(controlsFont);
+        minus10P.setToolTipText("Go back 10 frames");
+
+        JButton minus1P = new JButton("-1");
+        minus1P.setBounds(100, 10, 44, 40);
+        minus1P.setMargin(buttonInsets);
+        minus1P.setFont(controlsFont);
+        minus1P.setToolTipText("Go back 1 frame");
+
+        JTextField frameP = new JTextField("294");
+        frameP.setBounds(148, 10, 56, 40);
+        frameP.setHorizontalAlignment(SwingConstants.CENTER);
+        frameP.setFont(controlsFont);
+
+        JButton plus1P = new JButton("+1");
+        plus1P.setBounds(208, 10, 44, 40);
+        plus1P.setMargin(buttonInsets);
+        plus1P.setFont(controlsFont);
+        plus1P.setToolTipText("Go forward 1 frame");
+
+        JButton plus10P = new JButton("+10");
+        plus10P.setBounds(256, 10, 44, 40);
+        plus10P.setMargin(buttonInsets);
+        plus10P.setFont(controlsFont);
+        plus10P.setToolTipText("Go forward 10 frames");
+
+        JButton plus100P = new JButton("+100");
+        plus100P.setBounds(304, 10, 44, 40);
+        plus100P.setMargin(buttonInsets);
+        plus100P.setFont(controlsFont);
+        plus100P.setToolTipText("Go forward 100 frames");
+
+        //add button listeners here
+        //also add listener for changing the frame number
+
+        controlB.add(minus100P);
+        controlB.add(minus10P);
+        controlB.add(minus1P);
+        controlB.add(frameP);
+        controlB.add(plus1P);
+        controlB.add(plus10P);
+        controlB.add(plus100P);
+
+        primaryPanel.add(controlB);
 
 
 
         JPanel secondaryPanel = new JPanel();
-        secondaryPanel.setBackground(Color.GREEN);
+        secondaryPanel.setLayout(null);
+        secondaryPanel.setBackground(Color.BLACK);
+        secondaryPanel.setBounds(window.getWidth()-width-20, 0, width, height+120);
+
+        JPanel secondaryFramePanel = new JPanel();
+        secondaryFramePanel.setLayout(null);
+        secondaryFramePanel.setBackground(Color.LIGHT_GRAY);
+        secondaryFramePanel.setBounds(0, 20, width, height);
 
         JLabel secondaryFrame = new JLabel();
-        secondaryFrame.setIcon(new ImageIcon(img2));
-        secondaryPanel.add(secondaryFrame);
+        secondaryFrame.setBounds(0, 0, width, height);
+
+        if (secondaryVideoLoaded) {
+            secondaryFrame.setIcon(new ImageIcon(img2));
+        }
+
+        secondaryFramePanel.add(secondaryFrame);
+        secondaryPanel.add(secondaryFramePanel);
+
+        //control D
+        JPanel controlD = new JPanel();
+        controlD.setLayout(null);
+        controlD.setBackground(Color.WHITE);
+        controlD.setBounds(0, height+40, width, 60);
+
+        JButton minus100S = new JButton("-100");
+        minus100S.setBounds(4, 10, 44, 40);
+        minus100S.setMargin(buttonInsets);
+        minus100S.setFont(controlsFont);
+        minus100S.setToolTipText("Go back 100 frames");
+
+        JButton minus10S = new JButton("-10");
+        minus10S.setBounds(52, 10, 44, 40);
+        minus10S.setMargin(buttonInsets);
+        minus10S.setFont(controlsFont);
+        minus10S.setToolTipText("Go back 10 frames");
+
+        JButton minus1S = new JButton("-1");
+        minus1S.setBounds(100, 10, 44, 40);
+        minus1S.setMargin(buttonInsets);
+        minus1S.setFont(controlsFont);
+        minus1S.setToolTipText("Go back 1 frame");
+
+        JTextField frameS = new JTextField("7562");
+        frameS.setBounds(148, 10, 56, 40);
+        frameS.setHorizontalAlignment(SwingConstants.CENTER);
+        frameS.setFont(controlsFont);
+
+        JButton plus1S = new JButton("+1");
+        plus1S.setBounds(208, 10, 44, 40);
+        plus1S.setMargin(buttonInsets);
+        plus1S.setFont(controlsFont);
+        plus1S.setToolTipText("Go forward 1 frame");
+
+        JButton plus10S = new JButton("+10");
+        plus10S.setBounds(256, 10, 44, 40);
+        plus10S.setMargin(buttonInsets);
+        plus10S.setFont(controlsFont);
+        plus10S.setToolTipText("Go forward 10 frames");
+
+        JButton plus100S = new JButton("+100");
+        plus100S.setBounds(304, 10, 44, 40);
+        plus100S.setMargin(buttonInsets);
+        plus100S.setFont(controlsFont);
+        plus100S.setToolTipText("Go forward 100 frames");
+
+        //add button listeners here
+        //also add listener for changing the frame number
+
+        controlD.add(minus100S);
+        controlD.add(minus10S);
+        controlD.add(minus1S);
+        controlD.add(frameS);
+        controlD.add(plus1S);
+        controlD.add(plus10S);
+        controlD.add(plus100S);
+
+        secondaryPanel.add(controlD);
 
 
-        GridBagConstraints c = new GridBagConstraints();
-        c.fill = GridBagConstraints.HORIZONTAL;
-        c.anchor = GridBagConstraints.CENTER;
-        c.weightx = 0.5;
-        c.gridx = 0;
-        c.gridy = 0;
-        c.insets = new Insets(0,10,0,15);
-        framePanel.add(primaryPanel, c);
 
-        c.gridx = 1;
-        c.gridy = 0;
-        c.insets = new Insets(0,0,0,20);
-        framePanel.add(secondaryPanel, c);
+        framePanel.add(primaryPanel);
+        framePanel.add(secondaryPanel);
 
         mainPanel.add(framePanel);
 
