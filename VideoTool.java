@@ -73,7 +73,7 @@ public class VideoTool {
 
     void displayGUI(){
         window = new JFrame("Hyperlinked Video Creator");
-        window.setBounds(225, 60, width+width+60, height+380);
+        window.setBounds(225, 60, width+width+60, height+350);
         window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         window.setResizable(false);
 
@@ -88,28 +88,29 @@ public class VideoTool {
         JPanel controlPanel = new JPanel();
         controlPanel.setLayout(null);
         controlPanel.setBackground(Color.GRAY);
-        controlPanel.setBounds(0, 0, window.getWidth(), 120);
+        controlPanel.setBounds(5, 10, window.getWidth(), 110);
 
+        //control A, importing videos and creating hyperlinks
         JPanel controlA = new JPanel();
         controlA.setLayout(null);
         controlA.setBackground(Color.GRAY);
-        controlA.setBounds(20, 10, 270, 80);
+        controlA.setBounds(0, 10, 250, 80);
 
-        JLabel controlALabel = new JLabel("Action : ");
-        controlALabel.setBounds(2, 5, 70, 20);
+        JLabel controlALabel = new JLabel("Action :");
+        controlALabel.setBounds(2, 5, 65, 20);
         controlALabel.setFont(textFont);
 
         JPanel actionsPanel = new JPanel();
         actionsPanel.setLayout(null);
         actionsPanel.setBackground(Color.WHITE);
         actionsPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK, 3));
-        actionsPanel.setBounds(70, 0, 200, 80);
+        actionsPanel.setBounds(65, 0, 185, 80);
 
         //for now this will be a text area, later make the text function like buttons (add mouse listeners)
         JTextArea actions = new JTextArea("Import Primary Video\nImport Secondary Video\nCreate new hyperlink");
         actions.setEditable(false);
         actions.setFont(controlsFont);
-        actions.setBounds(10, 5, 180, 70);
+        actions.setBounds(10, 5, 170, 70);
         actionsPanel.add(actions);
 
         controlA.add(controlALabel);
@@ -118,10 +119,56 @@ public class VideoTool {
         controlPanel.add(controlA);
 
 
-        //TODO 2: add controls C, E, F
+        //control C, selecting hyperlinks
+        JPanel controlC = new JPanel();
+        controlC.setLayout(null);
+        controlC.setBackground(Color.GRAY);
+        controlC.setBounds(controlA.getWidth()+20, 10, 250, 80);
 
+        JLabel controlCLabel = new JLabel("Select Link :");
+        controlCLabel.setBounds(2, 5, 100, 20);
+        controlCLabel.setFont(textFont);
+
+        JPanel linkPanel = new JPanel();
+        linkPanel.setLayout(null);
+        linkPanel.setBackground(Color.WHITE);
+        linkPanel.setBounds(100, 0, 150, 80);
+
+        JTextArea hyperlinks = new JTextArea("Flowers 1\nFlowers 2\nGarden\nFlowers 3\nFlag");
+        hyperlinks.setEditable(false);
+        hyperlinks.setFont(controlsFont);
+        hyperlinks.setMargin(new Insets(2, 5, 2, 0));
+
+        JScrollPane hyperlinksScroll = new JScrollPane(hyperlinks);
+        hyperlinksScroll.setBorder(BorderFactory.createLineBorder(Color.BLACK, 3));
+        hyperlinksScroll.setBounds(0, 0, 150, 80);
+        hyperlinksScroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
+
+        linkPanel.add(hyperlinksScroll);
+
+        controlC.add(linkPanel);
+        controlC.add(controlCLabel);
+
+        controlPanel.add(controlC);
+
+
+        //control E, connect videos via hyperlink
+        JButton controlE = new JButton("<html>Connect Video</html>");
+        controlE.setFont(controlsFont);
+        controlE.setMargin(new Insets(2, 2, 2, 2));
+        controlE.setBounds(controlC.getX()+controlC.getWidth()+30, 15, 80, 70);
+
+        controlPanel.add(controlE);
+
+
+        //control F, save meta data file
+        JButton controlF = new JButton("<html>Save File</html>");
+        controlF.setFont(controlsFont);
+        controlF.setMargin(new Insets(2, 2, 2, 2));
+        controlF.setBounds(controlE.getX()+100, 15, 80, 70);
+
+        controlPanel.add(controlF);
         mainPanel.add(controlPanel);
-
 
 
         //includes displays for primary and secondary video frames and controls B, D
@@ -188,19 +235,16 @@ public class VideoTool {
         minus100P.setBounds(4, 10, 44, 40);
         minus100P.setMargin(buttonInsets);
         minus100P.setFont(controlsFont);
-        minus100P.setToolTipText("Go back 100 frames");
 
         JButton minus10P = new JButton("-10");
         minus10P.setBounds(52, 10, 44, 40);
         minus10P.setMargin(buttonInsets);
         minus10P.setFont(controlsFont);
-        minus10P.setToolTipText("Go back 10 frames");
 
         JButton minus1P = new JButton("-1");
         minus1P.setBounds(100, 10, 44, 40);
         minus1P.setMargin(buttonInsets);
         minus1P.setFont(controlsFont);
-        minus1P.setToolTipText("Go back 1 frame");
 
         JTextField frameP = new JTextField("294");
         frameP.setBounds(148, 10, 56, 40);
@@ -211,21 +255,18 @@ public class VideoTool {
         plus1P.setBounds(208, 10, 44, 40);
         plus1P.setMargin(buttonInsets);
         plus1P.setFont(controlsFont);
-        plus1P.setToolTipText("Go forward 1 frame");
 
         JButton plus10P = new JButton("+10");
         plus10P.setBounds(256, 10, 44, 40);
         plus10P.setMargin(buttonInsets);
         plus10P.setFont(controlsFont);
-        plus10P.setToolTipText("Go forward 10 frames");
 
         JButton plus100P = new JButton("+100");
         plus100P.setBounds(304, 10, 44, 40);
         plus100P.setMargin(buttonInsets);
         plus100P.setFont(controlsFont);
-        plus100P.setToolTipText("Go forward 100 frames");
 
-        //add button listeners here
+        //TODO: add button listeners here
         //also add listener for changing the frame number
 
         controlB.add(minus100P);
@@ -270,19 +311,16 @@ public class VideoTool {
         minus100S.setBounds(4, 10, 44, 40);
         minus100S.setMargin(buttonInsets);
         minus100S.setFont(controlsFont);
-        minus100S.setToolTipText("Go back 100 frames");
 
         JButton minus10S = new JButton("-10");
         minus10S.setBounds(52, 10, 44, 40);
         minus10S.setMargin(buttonInsets);
         minus10S.setFont(controlsFont);
-        minus10S.setToolTipText("Go back 10 frames");
 
         JButton minus1S = new JButton("-1");
         minus1S.setBounds(100, 10, 44, 40);
         minus1S.setMargin(buttonInsets);
         minus1S.setFont(controlsFont);
-        minus1S.setToolTipText("Go back 1 frame");
 
         JTextField frameS = new JTextField("7562");
         frameS.setBounds(148, 10, 56, 40);
@@ -293,21 +331,18 @@ public class VideoTool {
         plus1S.setBounds(208, 10, 44, 40);
         plus1S.setMargin(buttonInsets);
         plus1S.setFont(controlsFont);
-        plus1S.setToolTipText("Go forward 1 frame");
 
         JButton plus10S = new JButton("+10");
         plus10S.setBounds(256, 10, 44, 40);
         plus10S.setMargin(buttonInsets);
         plus10S.setFont(controlsFont);
-        plus10S.setToolTipText("Go forward 10 frames");
 
         JButton plus100S = new JButton("+100");
         plus100S.setBounds(304, 10, 44, 40);
         plus100S.setMargin(buttonInsets);
         plus100S.setFont(controlsFont);
-        plus100S.setToolTipText("Go forward 100 frames");
 
-        //add button listeners here
+        //TODO: add button listeners here
         //also add listener for changing the frame number
 
         controlD.add(minus100S);
