@@ -5,22 +5,27 @@
 // This file sets up the GUI and the functionality for the hyperlinked video authoring tool.
 
 import java.awt.*;
+import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 
 public class VideoTool {
+    boolean debug = true;
+
     JFrame window;
     int width = 352;
     int height = 288;
-    String primaryFilename;
-    String secondaryFilename;
+    String primaryFilename = "";
+    String secondaryFilename = "";
+    String startingDir = System.getProperty("user.dir");
 
-    boolean primaryVideoLoaded = false;
-    boolean secondaryVideoLoaded = false;
+    JLabel primaryFrame;
+    JLabel secondaryFrame;
 
-    private BufferedImage readFrame(String imageName) throws IOException{
+    private BufferedImage readFrame(String imageName){
         BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
 
         try {
@@ -64,7 +69,7 @@ public class VideoTool {
         }catch(IOException e){
             System.out.println("ERROR: " + e.getMessage());
             //System.exit(1);
-            throw e;
+            return null;
         }
 
         return img;
@@ -88,13 +93,13 @@ public class VideoTool {
         JPanel controlPanel = new JPanel();
         controlPanel.setLayout(null);
         controlPanel.setBackground(Color.GRAY);
-        controlPanel.setBounds(5, 10, window.getWidth(), 110);
+        controlPanel.setBounds(5, 5, window.getWidth(), 110);
 
         //control A, importing videos and creating hyperlinks
         JPanel controlA = new JPanel();
         controlA.setLayout(null);
         controlA.setBackground(Color.GRAY);
-        controlA.setBounds(0, 10, 250, 80);
+        controlA.setBounds(0, 10, 250, 90);
 
         JLabel controlALabel = new JLabel("Action :");
         controlALabel.setBounds(2, 5, 65, 20);
@@ -104,14 +109,82 @@ public class VideoTool {
         actionsPanel.setLayout(null);
         actionsPanel.setBackground(Color.WHITE);
         actionsPanel.setBorder(BorderFactory.createLineBorder(Color.BLACK, 3));
-        actionsPanel.setBounds(65, 0, 185, 80);
+        actionsPanel.setBounds(65, 0, 185, 90);
 
-        //for now this will be a text area, later make the text function like buttons (add mouse listeners)
-        JTextArea actions = new JTextArea("Import Primary Video\nImport Secondary Video\nCreate new hyperlink");
-        actions.setEditable(false);
-        actions.setFont(controlsFont);
-        actions.setBounds(10, 5, 170, 70);
-        actionsPanel.add(actions);
+        Insets buttonInsets = new Insets(0, 0, 0, 0);
+
+        final JButton importPrimary = new JButton("Import Primary Video");
+        importPrimary.setFont(controlsFont);
+        importPrimary.setMargin(buttonInsets);
+        importPrimary.setBackground(Color.WHITE);
+        importPrimary.setBounds(5, 5, 175, 25);
+
+        final JButton importSecondary = new JButton("Import Secondary Video");
+        importSecondary.setFont(controlsFont);
+        importSecondary.setMargin(buttonInsets);
+        importSecondary.setBackground(Color.WHITE);
+        importSecondary.setBounds(5, 30, 175, 25);
+
+        final JButton createLink = new JButton("Create new hyperlink");
+        createLink.setFont(controlsFont);
+        createLink.setMargin(buttonInsets);
+        createLink.setBackground(Color.WHITE);
+        createLink.setBounds(5, 55, 175, 25);
+
+        //add action listeners for A1,2,3 here
+        //button listener for control A (opening files and creating hyperlink)
+        class ControlAListener implements ActionListener{
+            JFileChooser chooser = new JFileChooser(startingDir);
+
+            ControlAListener(){
+                chooser.setFileFilter(new FileNameExtensionFilter("*.avi", "avi"));
+            }
+
+            @Override
+            public void actionPerformed(ActionEvent e){
+                if (e.getSource() == importPrimary){
+                    int value = chooser.showOpenDialog(null);
+
+                    if (value == JFileChooser.APPROVE_OPTION){
+                        primaryFilename = chooser.getSelectedFile().getAbsolutePath();
+                        primaryFilename = primaryFilename.substring(0, primaryFilename.indexOf('.'));
+
+                        loadVideo(0);
+
+                        chooser.setCurrentDirectory(new File(startingDir));
+                    }
+
+                    window.repaint();
+                }else if (e.getSource() == importSecondary){
+                    int value = chooser.showOpenDialog(null);
+
+                    if (value == JFileChooser.APPROVE_OPTION){
+                        secondaryFilename = chooser.getSelectedFile().getAbsolutePath();
+                        secondaryFilename = secondaryFilename.substring(0, secondaryFilename.indexOf('.'));
+
+                        loadVideo(1);
+
+                        chooser.setCurrentDirectory(new File(startingDir));
+                    }
+
+                    window.repaint();
+                }else{ //create hyperlink
+                    if (debug) {
+                        System.out.println("Creating hyperlink " + primaryFilename);
+                    }
+                }
+            }
+        }
+
+        ControlAListener controlAListen = new ControlAListener();
+
+        importPrimary.addActionListener(controlAListen);
+        importSecondary.addActionListener(controlAListen);
+        createLink.addActionListener(controlAListen);
+
+        actionsPanel.add(importPrimary);
+        actionsPanel.add(importSecondary);
+        actionsPanel.add(createLink);
 
         controlA.add(controlALabel);
         controlA.add(actionsPanel);
@@ -164,7 +237,7 @@ public class VideoTool {
         //control F, save meta data file
         JButton controlF = new JButton("<html>Save File</html>");
         controlF.setFont(controlsFont);
-        controlF.setMargin(new Insets(2, 2, 2, 2));
+        controlF.setMargin(buttonInsets);
         controlF.setBounds(controlE.getX()+100, 15, 80, 70);
 
         controlPanel.add(controlF);
@@ -177,32 +250,6 @@ public class VideoTool {
         framePanel.setBackground(Color.BLACK);
         framePanel.setBounds(0, 120, window.getWidth(), height+120);
 
-
-        primaryFilename = "datasets/London/LondonOne/LondonOne.avi"; //temp, will get value from action A1
-        primaryFilename = primaryFilename.substring(0, primaryFilename.indexOf('.'));
-
-        secondaryFilename = "datasets/NewYorkCity/NYTwo/NYTwo.avi"; //temp, will get value from action A2
-        secondaryFilename = secondaryFilename.substring(0, secondaryFilename.indexOf('.'));
-
-        BufferedImage img1 = null;
-        BufferedImage img2 = null;
-
-        try {
-            img1 = readFrame(primaryFilename + "0294.rgb");
-            img2 = readFrame(secondaryFilename + "7562.rgb");
-        } catch (IOException e){
-
-        }
-
-        if (img1 != null){
-            primaryVideoLoaded = true;
-        }
-
-        if (img2 != null){
-            secondaryVideoLoaded = true;
-        }
-
-
         JPanel primaryPanel = new JPanel();
         primaryPanel.setLayout(null);
         primaryPanel.setBackground(Color.BLACK);
@@ -213,17 +260,11 @@ public class VideoTool {
         primaryFramePanel.setBackground(Color.LIGHT_GRAY);
         primaryFramePanel.setBounds(0, 20, width, height);
 
-        JLabel primaryFrame = new JLabel();
+        primaryFrame = new JLabel();
         primaryFrame.setBounds(0, 0, width, height);
-
-        if (primaryVideoLoaded){
-            primaryFrame.setIcon(new ImageIcon(img1));
-        }
-
         primaryFramePanel.add(primaryFrame);
         primaryPanel.add(primaryFramePanel);
 
-        Insets buttonInsets = new Insets(0, 0, 0, 0);
 
         //control B
         JPanel controlB = new JPanel();
@@ -246,7 +287,7 @@ public class VideoTool {
         minus1P.setMargin(buttonInsets);
         minus1P.setFont(controlsFont);
 
-        JTextField frameP = new JTextField("294");
+        JTextField frameP = new JTextField("1");
         frameP.setBounds(148, 10, 56, 40);
         frameP.setHorizontalAlignment(SwingConstants.CENTER);
         frameP.setFont(controlsFont);
@@ -291,13 +332,8 @@ public class VideoTool {
         secondaryFramePanel.setBackground(Color.LIGHT_GRAY);
         secondaryFramePanel.setBounds(0, 20, width, height);
 
-        JLabel secondaryFrame = new JLabel();
+        secondaryFrame = new JLabel();
         secondaryFrame.setBounds(0, 0, width, height);
-
-        if (secondaryVideoLoaded) {
-            secondaryFrame.setIcon(new ImageIcon(img2));
-        }
-
         secondaryFramePanel.add(secondaryFrame);
         secondaryPanel.add(secondaryFramePanel);
 
@@ -322,7 +358,7 @@ public class VideoTool {
         minus1S.setMargin(buttonInsets);
         minus1S.setFont(controlsFont);
 
-        JTextField frameS = new JTextField("7562");
+        JTextField frameS = new JTextField("1");
         frameS.setBounds(148, 10, 56, 40);
         frameS.setHorizontalAlignment(SwingConstants.CENTER);
         frameS.setFont(controlsFont);
@@ -365,6 +401,37 @@ public class VideoTool {
         window.getContentPane().add(mainPanel);
         window.setVisible(true);
 
+    }
+
+    //for now this just loads the first frame of the selected video
+    public void loadVideo(int type){
+        String fileName;
+
+        if (type == 0){
+            fileName = primaryFilename;
+        }else{
+            fileName = secondaryFilename;
+        }
+
+        BufferedImage img = readFrame(fileName + "0001.rgb");
+
+        if (img != null){
+            if (debug){
+                if (type == 0) {
+                    System.out.print("Importing primary");
+                }else{
+                    System.out.print("Importing secondary");
+                }
+
+                System.out.println(" video: " + fileName + ".avi");
+            }
+
+            if (type == 0) {
+                primaryFrame.setIcon(new ImageIcon(img));
+            }else {
+                secondaryFrame.setIcon(new ImageIcon(img));
+            }
+        }
     }
 
 
