@@ -77,6 +77,10 @@ public class VideoTool {
 
 
     void displayGUI(){
+        ToolTipManager.sharedInstance().setEnabled(false);
+        //there was a really weired bug where when a tooltip was displayed, the window would
+        //repaint over itself whenever the mouse was moved
+
         window = new JFrame("Hyperlinked Video Creator");
         window.setBounds(225, 60, width+width+60, height+350);
         window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -113,19 +117,19 @@ public class VideoTool {
 
         Insets buttonInsets = new Insets(0, 0, 0, 0);
 
-        final JButton importPrimary = new JButton("Import Primary Video");
+        final ControlAButton importPrimary = new ControlAButton("Import Primary Video");
         importPrimary.setFont(controlsFont);
         importPrimary.setMargin(buttonInsets);
         importPrimary.setBackground(Color.WHITE);
         importPrimary.setBounds(5, 5, 175, 25);
 
-        final JButton importSecondary = new JButton("Import Secondary Video");
+        final ControlAButton importSecondary = new ControlAButton("Import Secondary Video");
         importSecondary.setFont(controlsFont);
         importSecondary.setMargin(buttonInsets);
         importSecondary.setBackground(Color.WHITE);
         importSecondary.setBounds(5, 30, 175, 25);
 
-        final JButton createLink = new JButton("Create new hyperlink");
+        final ControlAButton createLink = new ControlAButton("Create new hyperlink");
         createLink.setFont(controlsFont);
         createLink.setMargin(buttonInsets);
         createLink.setBackground(Color.WHITE);
@@ -153,8 +157,6 @@ public class VideoTool {
 
                         chooser.setCurrentDirectory(new File(startingDir));
                     }
-
-                    window.repaint();
                 }else if (e.getSource() == importSecondary){
                     int value = chooser.showOpenDialog(null);
 
@@ -166,8 +168,6 @@ public class VideoTool {
 
                         chooser.setCurrentDirectory(new File(startingDir));
                     }
-
-                    window.repaint();
                 }else{ //create hyperlink
                     if (debug) {
                         System.out.println("Creating hyperlink " + primaryFilename);
@@ -400,7 +400,6 @@ public class VideoTool {
 
         window.getContentPane().add(mainPanel);
         window.setVisible(true);
-
     }
 
     //for now this just loads the first frame of the selected video
@@ -431,6 +430,38 @@ public class VideoTool {
             }else {
                 secondaryFrame.setIcon(new ImageIcon(img));
             }
+        }
+    }
+
+
+    //custom button for control A buttons
+    class ControlAButton extends JButton{
+        Color hoverColor = Color.BLACK;
+        Color pressedColor = Color.LIGHT_GRAY;
+
+        public ControlAButton(String text){
+            super(text);
+            super.setContentAreaFilled(false);
+            super.setBorderPainted(false);
+            super.setFocusPainted(false);
+        }
+
+        @Override
+        protected void paintComponent(Graphics g){
+            if (getModel().isPressed()) {
+                g.setColor(pressedColor);
+                g.fillRect(0, 0, getWidth(), getHeight());
+            } else if (getModel().isRollover()) {
+                g.setColor(hoverColor);
+                g.fillRect(0, 0, getWidth(), getHeight());
+                g.setColor(getBackground());
+                g.fillRect(2, 2, getWidth()-4, getHeight()-4);
+            } else {
+                g.setColor(getBackground());
+                g.fillRect(0, 0, getWidth(), getHeight());
+            }
+
+            super.paintComponent(g);
         }
     }
 
