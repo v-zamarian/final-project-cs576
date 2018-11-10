@@ -6,6 +6,7 @@
 
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import javax.swing.*;
@@ -18,12 +19,16 @@ public class VideoTool {
     JFrame window;
     int width = 352;
     int height = 288;
+    int cornerSize = 8;
     String primaryFilename = "";
     String secondaryFilename = "";
     String startingDir = System.getProperty("user.dir");
+    boolean primaryVideoLoaded = false;
 
     JLabel primaryFrame;
     JLabel secondaryFrame;
+
+    BoxDrawingPanel boxDraw;
 
     private BufferedImage readFrame(String imageName){
         BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
@@ -169,8 +174,15 @@ public class VideoTool {
                         chooser.setCurrentDirectory(new File(startingDir));
                     }
                 }else{ //create hyperlink
-                    if (debug) {
-                        System.out.println("Creating hyperlink " + primaryFilename);
+                    if (primaryVideoLoaded) {
+                        if (debug) {
+                            System.out.println("Creating hyperlink");
+                        }
+
+                        boxDraw.setVisible(true);
+                    }else{
+                        //change this to show a dialog instead
+                        System.out.println("Need to load a primary video first.");
                     }
                 }
             }
@@ -262,6 +274,13 @@ public class VideoTool {
 
         primaryFrame = new JLabel();
         primaryFrame.setBounds(0, 0, width, height);
+
+        boxDraw = new BoxDrawingPanel();
+        boxDraw.setBounds(0, 0, width, height);
+        boxDraw.setOpaque(false);
+        boxDraw.setVisible(false);
+
+        primaryFramePanel.add(boxDraw);
         primaryFramePanel.add(primaryFrame);
         primaryPanel.add(primaryFramePanel);
 
@@ -427,6 +446,7 @@ public class VideoTool {
 
             if (type == 0) {
                 primaryFrame.setIcon(new ImageIcon(img));
+                primaryVideoLoaded = true;
             }else {
                 secondaryFrame.setIcon(new ImageIcon(img));
             }
@@ -462,6 +482,75 @@ public class VideoTool {
             }
 
             super.paintComponent(g);
+        }
+    }
+
+
+    //used for drawing hyperlink boxes on top of the primary video frames
+    class BoxDrawingPanel extends JPanel{
+        Color boxColor = new Color(255, 0, 0, 127); //temporarily set a default color
+
+        Rectangle2D[] points = {new Rectangle2D.Double(150, 125, cornerSize, cornerSize),
+                new Rectangle2D.Double(200, 165, cornerSize, cornerSize) };
+        Rectangle2D s = new Rectangle2D.Double();
+
+        BoxMouseAdapter mAdapter = new BoxMouseAdapter();
+
+        BoxDrawingPanel(){
+            addMouseListener(mAdapter);
+            addMouseMotionListener(mAdapter);
+        }
+
+        @Override
+        protected void paintComponent(Graphics g){
+            super.paintComponent(g);
+
+            Graphics2D g2 = (Graphics2D) g;
+
+            g2.setColor(boxColor);
+            g2.setStroke(new BasicStroke(2));
+
+            for (int i = 0; i < points.length; i++){
+              g2.fill(points[i]);
+            }
+
+            s.setRect(points[0].getCenterX(), points[0].getCenterY(),
+                    Math.abs(points[1].getCenterX() - points[0].getCenterX()),
+                    Math.abs(points[1].getCenterY() - points[0].getCenterY()));
+
+            g2.draw(s);
+        }
+
+        //TODO: make it so box cannot be dragged outside of boundaries
+        //TODO: maintain shape when flipping directions
+        class BoxMouseAdapter extends MouseAdapter{
+            private int pos = -1;
+
+            public void mousePressed(MouseEvent e){
+                Point p = e.getPoint();
+
+                for (int i = 0; i < points.length; i++){
+                    if (points[i].contains(p)){
+                        pos = i;
+                        return;
+                    }
+                }
+            }
+
+            public void mouseReleased(MouseEvent e){
+                pos = -1;
+            }
+
+            public void mouseDragged(MouseEvent e){
+                if (pos == -1){
+                    return;
+                }
+
+                points[pos].setRect(e.getPoint().x, e.getPoint().y,
+                        points[pos].getWidth(), points[pos].getHeight());
+
+                repaint();
+            }
         }
     }
 
