@@ -175,14 +175,16 @@ public class VideoTool {
                     }
                 }else{ //create hyperlink
                     if (primaryVideoLoaded) {
-                        if (debug) {
-                            System.out.println("Creating hyperlink");
-                        }
-
+                        String linkName = JOptionPane.showInputDialog("Enter a name for the hyperlink:");
+                        boxDraw.selectColor();
                         boxDraw.setVisible(true);
+
+                        if (debug) {
+                            System.out.println("Creating hyperlink: " + linkName);
+                        }
                     }else{
-                        //change this to show a dialog instead
-                        System.out.println("Need to load a primary video first.");
+                        JOptionPane.showMessageDialog(window, "Need to load a primary video first.",
+                                "Error", JOptionPane.ERROR_MESSAGE);
                     }
                 }
             }
@@ -411,7 +413,6 @@ public class VideoTool {
         secondaryPanel.add(controlD);
 
 
-
         framePanel.add(primaryPanel);
         framePanel.add(secondaryPanel);
 
@@ -420,6 +421,7 @@ public class VideoTool {
         window.getContentPane().add(mainPanel);
         window.setVisible(true);
     }
+
 
     //for now this just loads the first frame of the selected video
     public void loadVideo(int type){
@@ -488,17 +490,26 @@ public class VideoTool {
 
     //used for drawing hyperlink boxes on top of the primary video frames
     class BoxDrawingPanel extends JPanel{
-        Color boxColor = new Color(255, 0, 0, 127); //temporarily set a default color
-
+        //opposite corners of box
         Rectangle2D[] points = {new Rectangle2D.Double(150, 125, cornerSize, cornerSize),
                 new Rectangle2D.Double(200, 165, cornerSize, cornerSize) };
-        Rectangle2D s = new Rectangle2D.Double();
+        Rectangle2D s = new Rectangle2D.Double(); //box itself
+
+        Color boxColor = Color.BLACK; //color of the box
 
         BoxMouseAdapter mAdapter = new BoxMouseAdapter();
+
+        //these values will define the hyperlink box to be displayed when playing the hyperlinked video
+        //keeping them here for now and will save them to the metadata file later
+        int boxXPos, boxYPos, boxWidth, boxHeight;
 
         BoxDrawingPanel(){
             addMouseListener(mAdapter);
             addMouseMotionListener(mAdapter);
+        }
+
+        void selectColor(){
+            boxColor = JColorChooser.showDialog(null, "Choose the box color", Color.RED);
         }
 
         @Override
@@ -506,26 +517,50 @@ public class VideoTool {
             super.paintComponent(g);
 
             Graphics2D g2 = (Graphics2D) g;
-
             g2.setColor(boxColor);
-            g2.setStroke(new BasicStroke(2));
+
+            //dashed line
+            g2.setStroke(new BasicStroke(2, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_BEVEL, 0, new float[]{7}, 0));
 
             for (int i = 0; i < points.length; i++){
               g2.fill(points[i]);
             }
 
-            s.setRect(points[0].getCenterX(), points[0].getCenterY(),
-                    Math.abs(points[1].getCenterX() - points[0].getCenterX()),
+            double newX = points[0].getCenterX();
+            double newY = points[0].getCenterY();
+
+            newX = Math.min(points[1].getCenterX(), newX); //not putting points[0] here since repaint lag occurs
+            newY = Math.min(points[1].getCenterY(), newY);
+
+            s.setRect(newX, newY, Math.abs(points[1].getCenterX() - points[0].getCenterX()),
                     Math.abs(points[1].getCenterY() - points[0].getCenterY()));
 
             g2.draw(s);
         }
 
-        //TODO: make it so box cannot be dragged outside of boundaries
-        //TODO: maintain shape when flipping directions
         class BoxMouseAdapter extends MouseAdapter{
             private int pos = -1;
 
+            private void setBoxParams(){
+                //x,y position of box is always its top left corner
+                boxXPos = Math.min((int) points[0].getCenterX(), (int) points[1].getCenterX());
+                boxYPos = Math.min((int) points[0].getCenterY(), (int) points[1].getCenterY());
+
+                boxWidth = (int) Math.abs(points[1].getCenterX() - points[0].getCenterX());
+                boxHeight = (int) Math.abs(points[1].getCenterY() - points[0].getCenterY());
+            }
+
+            @Override
+            public void mouseMoved(MouseEvent e){
+                //indicate that the box corners can be dragged by changing the mouse cursor
+                if (points[0].contains(e.getPoint()) || points[1].contains(e.getPoint())) {
+                    e.getComponent().setCursor(Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR));
+                }else{
+                    e.getComponent().setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+                }
+            }
+
+            @Override
             public void mousePressed(MouseEvent e){
                 Point p = e.getPoint();
 
@@ -537,17 +572,27 @@ public class VideoTool {
                 }
             }
 
+            @Override
             public void mouseReleased(MouseEvent e){
                 pos = -1;
+                e.getComponent().setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+
+                setBoxParams();
             }
 
+            @Override
             public void mouseDragged(MouseEvent e){
                 if (pos == -1){
                     return;
                 }
 
-                points[pos].setRect(e.getPoint().x, e.getPoint().y,
-                        points[pos].getWidth(), points[pos].getHeight());
+                e.getComponent().setCursor(Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR));
+
+                //keep corners inside the frame boundaries
+                int newX = Math.min(width-cornerSize/2, Math.max(-cornerSize/2, e.getX()));
+                int newY = Math.min(height-cornerSize/2, Math.max(-cornerSize/2, e.getY()));
+
+                points[pos].setRect(newX, newY, points[pos].getWidth(), points[pos].getHeight());
 
                 repaint();
             }
