@@ -5,9 +5,6 @@
 // This file sets up the GUI and the functionality for the hyperlinked video authoring tool.
 
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.image.BufferedImage;
 import java.io.*;
 import javax.swing.*;
 
@@ -40,12 +37,7 @@ public class VideoTool extends JFrame {
         gridbag.setConstraints(controlPanel, c);
         contentPane.add(controlPanel);
 
-        try {
-            videoPanel = new VideoToolVideoPanel();
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.exit(1);
-        }
+        videoPanel = new VideoToolVideoPanel();
         videoPanel.initVideoPanel();
         c.weightx = 1.0;
         c.weighty = 0.8;
@@ -53,9 +45,6 @@ public class VideoTool extends JFrame {
         c.gridy = 1;
         gridbag.setConstraints(videoPanel, c);
         contentPane.add(videoPanel);
-
-        // Add filler panel for bottom grey area
-        JPanel filler = new JPanel();
 
         // Last display steps
         this.setSize(750, 500);
@@ -65,8 +54,7 @@ public class VideoTool extends JFrame {
     public static void main(String args[]){
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-                VideoTool tool = new VideoTool();
-                tool.displayGUI(); //this file doesn't/shouldn't depend on command line arguments
+                (new VideoTool()).displayGUI(); //this file doesn't/shouldn't depend on command line arguments
             }
         });
     }
