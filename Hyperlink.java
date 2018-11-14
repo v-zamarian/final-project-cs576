@@ -17,11 +17,11 @@ public class Hyperlink {
     int boxHeight;
     Color boxColor;
 
-    public Hyperlink(Color c){
-        primaryName = "";
-        startFrame = -1;
+    public Hyperlink(String p, String s, int start, Color c){
+        primaryName = p;
+        startFrame = start;
         endFrame = -1;
-        secondaryName = "";
+        secondaryName = s;
         secondFrame = -1;
         corner = new Point(0,0);
         boxWidth = 0;
@@ -34,6 +34,11 @@ public class Hyperlink {
         corner = p;
         boxWidth = w;
         boxHeight = h;
+    }
+
+    public void setFrames(int endP, int startS){
+        endFrame = endP;
+        secondFrame = startS;
     }
 
     @Override

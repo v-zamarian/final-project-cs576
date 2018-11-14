@@ -27,14 +27,24 @@ public class BoxDrawingPanel extends JPanel {
         addMouseMotionListener(mAdapter);
     }
 
-    void addHyperlink(String linkName, Color c){
-        hyperlinks.put(linkName, new Hyperlink(c));
+    void addHyperlink(String linkName, String p, String s, int start, Color c){
+        hyperlinks.put(linkName, new Hyperlink(p, s, start, c));
 
         //put initial box in default position
         hyperlinkBoxes.put(linkName, new Rectangle2D[] {new Rectangle2D.Double(150, 125, cornerSize, cornerSize),
                 new Rectangle2D.Double(200, 165, cornerSize, cornerSize)} );
 
         setBoxParams();
+
+        repaint();
+    }
+
+    void setFrames(int primaryEnd, int secondaryStart){
+        if (VideoTool.currentLink.equals("")){
+            return;
+        }
+
+        hyperlinks.get(VideoTool.currentLink).setFrames(primaryEnd, secondaryStart);
 
         repaint();
     }
@@ -65,6 +75,14 @@ public class BoxDrawingPanel extends JPanel {
         for (Map.Entry<String, Rectangle2D[]> entry : hyperlinkBoxes.entrySet()){
             String key = entry.getKey();
             Rectangle2D[] points = entry.getValue();
+
+            //after connecting the hyperlink, only draw the box on the frames it was linked to
+            if (hyperlinks.get(key).endFrame != -1) {
+                if (VideoTool.currentFrameP < hyperlinks.get(key).startFrame ||
+                        VideoTool.currentFrameP > hyperlinks.get(key).endFrame) {
+                    continue;
+                }
+            }
 
             g2.setColor(hyperlinks.get(key).boxColor);
 

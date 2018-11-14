@@ -30,7 +30,8 @@ public class VideoTool {
     BoxDrawingPanel boxDraw;
 
     static String currentLink = ""; //keeps track of the current hyperlink being edited
-    static int currentFrame = -1; //keeps track of the current frame in the primary video
+    static int currentFrameP = -1; //keeps track of the current frame in the primary video
+    int currentFrameS = -1; //keeps track of the current frame in the secondary video
 
     private BufferedImage readFrame(String imageName){
         BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
@@ -176,20 +177,20 @@ public class VideoTool {
                         chooser.setCurrentDirectory(new File(startingDir));
                     }
                 }else{ //create hyperlink
-                    if (primaryVideoLoaded && secondaryVideoLoaded || true){ //temp
+                    if (primaryVideoLoaded && secondaryVideoLoaded){
                         String linkName = JOptionPane.showInputDialog("Enter a name for the hyperlink:");
                         linkName = linkName.replaceAll("\\W", ""); //only allowing alphanumeric characters
 
                         Color bColor = selectColor();
 
                         currentLink = linkName;
-                        boxDraw.addHyperlink(linkName, bColor);
+                        boxDraw.addHyperlink(linkName, primaryFilename, secondaryFilename, currentFrameP, bColor);
 
-                        if (debug) {
+                        if (debug){
                             System.out.println("Creating hyperlink: " + linkName);
                         }
                     }else{
-                        JOptionPane.showMessageDialog(window, "Need to load a primary video first.",
+                        JOptionPane.showMessageDialog(window, "Need to load videos first.",
                                 "Error", JOptionPane.ERROR_MESSAGE);
                     }
                 }
@@ -251,10 +252,12 @@ public class VideoTool {
         controlE.setMargin(new Insets(2, 2, 2, 2));
         controlE.setBounds(controlC.getX()+controlC.getWidth()+30, 15, 80, 70);
 
-        controlE.addActionListener(new ActionListener() { //temp
+        controlE.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                System.out.println(boxDraw.hyperlinks);
+                boxDraw.setFrames(currentFrameP, currentFrameS); //connect the hyperlink to the secondary video
+                currentLink = "";
+                System.out.println(boxDraw.hyperlinks); //temp
             }
         });
 
@@ -320,7 +323,7 @@ public class VideoTool {
         minus1P.setMargin(buttonInsets);
         minus1P.setFont(controlsFont);
 
-        JTextField frameP = new JTextField("1");
+        final JTextField frameP = new JTextField("1");
         frameP.setBounds(148, 10, 56, 40);
         frameP.setHorizontalAlignment(SwingConstants.CENTER);
         frameP.setFont(controlsFont);
@@ -342,6 +345,25 @@ public class VideoTool {
 
         //TODO: add button listeners here
         //also add listener for changing the frame number
+
+        //only for testing drawing boxes at correct frames
+        minus10P.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                currentFrameP -= 10;
+                frameP.setText("" + currentFrameP);
+                boxDraw.repaint();
+            }
+        });
+
+        plus10P.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                currentFrameP += 10;
+                frameP.setText("" + currentFrameP);
+                boxDraw.repaint();
+            }
+        });
 
         controlB.add(minus100P);
         controlB.add(minus10P);
@@ -391,7 +413,7 @@ public class VideoTool {
         minus1S.setMargin(buttonInsets);
         minus1S.setFont(controlsFont);
 
-        JTextField frameS = new JTextField("1");
+        final JTextField frameS = new JTextField("1");
         frameS.setBounds(148, 10, 56, 40);
         frameS.setHorizontalAlignment(SwingConstants.CENTER);
         frameS.setFont(controlsFont);
@@ -413,6 +435,25 @@ public class VideoTool {
 
         //TODO: add button listeners here
         //also add listener for changing the frame number
+
+        //only for testing drawing boxes at correct frames
+        minus10S.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                currentFrameS += 10;
+                frameS.setText("" + currentFrameS);
+                boxDraw.repaint();
+            }
+        });
+
+        plus10S.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                currentFrameS += 10;
+                frameS.setText("" + currentFrameS);
+                boxDraw.repaint();
+            }
+        });
 
         controlD.add(minus100S);
         controlD.add(minus10S);
@@ -464,9 +505,11 @@ public class VideoTool {
             if (type == 0) {
                 primaryFrame.setIcon(new ImageIcon(img));
                 primaryVideoLoaded = true;
+                currentFrameP = 1;
             }else {
                 secondaryFrame.setIcon(new ImageIcon(img));
                 secondaryVideoLoaded = true;
+                currentFrameS = 1;
             }
         }
     }
