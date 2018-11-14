@@ -6,7 +6,6 @@
 
 import java.awt.*;
 import java.awt.event.*;
-import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import javax.swing.*;
@@ -23,11 +22,15 @@ public class VideoTool {
     String secondaryFilename = "";
     String startingDir = System.getProperty("user.dir");
     boolean primaryVideoLoaded = false;
+    boolean secondaryVideoLoaded = false;
 
     JLabel primaryFrame;
     JLabel secondaryFrame;
 
     BoxDrawingPanel boxDraw;
+
+    static String currentLink = ""; //keeps track of the current hyperlink being edited
+    static int currentFrame = -1; //keeps track of the current frame in the primary video
 
     private BufferedImage readFrame(String imageName){
         BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
@@ -173,10 +176,14 @@ public class VideoTool {
                         chooser.setCurrentDirectory(new File(startingDir));
                     }
                 }else{ //create hyperlink
-                    if (primaryVideoLoaded) {
+                    if (primaryVideoLoaded && secondaryVideoLoaded || true){ //temp
                         String linkName = JOptionPane.showInputDialog("Enter a name for the hyperlink:");
-                        boxDraw.selectColor();
-                        boxDraw.setVisible(true);
+                        linkName = linkName.replaceAll("\\W", ""); //only allowing alphanumeric characters
+
+                        Color bColor = selectColor();
+
+                        currentLink = linkName;
+                        boxDraw.addHyperlink(linkName, bColor);
 
                         if (debug) {
                             System.out.println("Creating hyperlink: " + linkName);
@@ -220,12 +227,12 @@ public class VideoTool {
         linkPanel.setBackground(Color.WHITE);
         linkPanel.setBounds(100, 0, 150, 80);
 
-        JTextArea hyperlinks = new JTextArea("Flowers 1\nFlowers 2\nGarden\nFlowers 3\nFlag");
-        hyperlinks.setEditable(false);
-        hyperlinks.setFont(controlsFont);
-        hyperlinks.setMargin(new Insets(2, 5, 2, 0));
+        JTextArea hyperlinksList = new JTextArea("Flowers 1\nFlowers 2\nGarden\nFlowers 3\nFlag");
+        hyperlinksList.setEditable(false);
+        hyperlinksList.setFont(controlsFont);
+        hyperlinksList.setMargin(new Insets(2, 5, 2, 0));
 
-        JScrollPane hyperlinksScroll = new JScrollPane(hyperlinks);
+        JScrollPane hyperlinksScroll = new JScrollPane(hyperlinksList);
         hyperlinksScroll.setBorder(BorderFactory.createLineBorder(Color.BLACK, 3));
         hyperlinksScroll.setBounds(0, 0, 150, 80);
         hyperlinksScroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
@@ -243,6 +250,13 @@ public class VideoTool {
         controlE.setFont(controlsFont);
         controlE.setMargin(new Insets(2, 2, 2, 2));
         controlE.setBounds(controlC.getX()+controlC.getWidth()+30, 15, 80, 70);
+
+        controlE.addActionListener(new ActionListener() { //temp
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                System.out.println(boxDraw.hyperlinks);
+            }
+        });
 
         controlPanel.add(controlE);
 
@@ -279,7 +293,6 @@ public class VideoTool {
         boxDraw = new BoxDrawingPanel();
         boxDraw.setBounds(0, 0, width, height);
         boxDraw.setOpaque(false);
-        boxDraw.setVisible(false);
 
         primaryFramePanel.add(boxDraw);
         primaryFramePanel.add(primaryFrame);
@@ -421,6 +434,9 @@ public class VideoTool {
         window.setVisible(true);
     }
 
+    Color selectColor(){
+        return JColorChooser.showDialog(null, "Choose the box color", Color.RED);
+    }
 
     //for now this just loads the first frame of the selected video
     public void loadVideo(int type){
@@ -450,6 +466,7 @@ public class VideoTool {
                 primaryVideoLoaded = true;
             }else {
                 secondaryFrame.setIcon(new ImageIcon(img));
+                secondaryVideoLoaded = true;
             }
         }
     }
