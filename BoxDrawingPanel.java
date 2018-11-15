@@ -39,6 +39,10 @@ public class BoxDrawingPanel extends JPanel {
         repaint();
     }
 
+    Hyperlink getHyperlink(String linkName){
+        return hyperlinks.get(linkName);
+    }
+
     void setFrames(int primaryEnd, int secondaryStart){
         if (VideoTool.currentLink.equals("")){
             return;
@@ -66,6 +70,19 @@ public class BoxDrawingPanel extends JPanel {
         hyperlinks.get(VideoTool.currentLink).setBoxParams(new Point(boxXPos, boxYPos), boxWidth, boxHeight);
     }
 
+    //checks if the current hyperlink being edited has been connected to a secondary video yet
+    boolean isConnected(String name){
+        return hyperlinks.get(name).secondFrame != -1;
+    }
+
+    //removes a hyperlink
+    void removeLink(String name){
+        hyperlinks.remove(name);
+        hyperlinkBoxes.remove(name);
+
+        repaint();
+    }
+
     @Override
     protected void paintComponent(Graphics g){
         super.paintComponent(g);
@@ -89,8 +106,10 @@ public class BoxDrawingPanel extends JPanel {
             if (key.equals(VideoTool.currentLink)){ //dashed line for current box to be edited
                 g2.setStroke(new BasicStroke(2, BasicStroke.CAP_SQUARE, BasicStroke.JOIN_BEVEL, 0, new float[]{7}, 0));
 
-                g2.fill(points[0]);
-                g2.fill(points[1]);
+                if (!isConnected(key)) {
+                    g2.fill(points[0]);
+                    g2.fill(points[1]);
+                }
             }else{
                 g2.setStroke(new BasicStroke(2));
             }
@@ -113,7 +132,7 @@ public class BoxDrawingPanel extends JPanel {
 
         @Override
         public void mouseMoved(MouseEvent e){
-            if (VideoTool.currentLink.equals("")){
+            if (VideoTool.currentLink.equals("") || isConnected(VideoTool.currentLink)){
                 return;
             }
 
@@ -129,7 +148,7 @@ public class BoxDrawingPanel extends JPanel {
 
         @Override
         public void mousePressed(MouseEvent e){
-            if (VideoTool.currentLink.equals("")){
+            if (VideoTool.currentLink.equals("") || isConnected(VideoTool.currentLink)){
                 return;
             }
 

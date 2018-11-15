@@ -28,10 +28,14 @@ public class VideoTool {
     JLabel secondaryFrame;
 
     BoxDrawingPanel boxDraw;
+    JComboBox<String> hyperlinksList;
+    boolean triggerListListener = true; //when adding items to the hyperlink list, don't trigger the itemListener
 
     static String currentLink = ""; //keeps track of the current hyperlink being edited
     static int currentFrameP = -1; //keeps track of the current frame in the primary video
     int currentFrameS = -1; //keeps track of the current frame in the secondary video
+
+    JTextField frameP;
 
     private BufferedImage readFrame(String imageName){
         BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
@@ -178,17 +182,46 @@ public class VideoTool {
                     }
                 }else{ //create hyperlink
                     if (primaryVideoLoaded && secondaryVideoLoaded){
-                        String linkName = JOptionPane.showInputDialog("Enter a name for the hyperlink:");
-                        linkName = linkName.replaceAll("\\W", ""); //only allowing alphanumeric characters
+                        triggerListListener = false;
 
-                        Color bColor = selectColor();
+                        if (!currentLink.equals("")){ //if a hyperlink is currently being edited
+                            if (!boxDraw.isConnected(currentLink)){
+                                if (!stopEditingCurrentLink()){
+                                    triggerListListener = true;
+                                    return;
+                                }else{ //remove current hyperlink if it was not connected yet, ok was pressed
+                                    hyperlinksList.removeItem(currentLink);
+                                    boxDraw.removeLink(currentLink);
+                                    currentLink = "";
+                                }
+                            }
+                        }
+
+                        String linkName = JOptionPane.showInputDialog("Enter a name for the hyperlink:");
+
+                        if (linkName == null){ //cancel was pressed
+                            return;
+                        }
+
+                        //only allowing alphanumeric characters and spaces
+                        linkName = linkName.replaceAll("[^A-Za-z0-9 ]", "");
+
+                        if (linkName.equals("")){
+                            JOptionPane.showMessageDialog(window, "Invalid link name.",
+                                    "Error", JOptionPane.ERROR_MESSAGE);
+                            return;
+                        }
 
                         currentLink = linkName;
-                        boxDraw.addHyperlink(linkName, primaryFilename, secondaryFilename, currentFrameP, bColor);
+                        boxDraw.addHyperlink(linkName, primaryFilename, secondaryFilename, currentFrameP, selectColor());
+                        hyperlinksList.addItem(linkName);
+                        hyperlinksList.setSelectedItem(linkName);
 
                         if (debug){
                             System.out.println("Creating hyperlink: " + linkName);
                         }
+
+                        triggerListListener = true;
                     }else{
                         JOptionPane.showMessageDialog(window, "Need to load videos first.",
                                 "Error", JOptionPane.ERROR_MESSAGE);
@@ -226,19 +259,65 @@ public class VideoTool {
         JPanel linkPanel = new JPanel();
         linkPanel.setLayout(null);
         linkPanel.setBackground(Color.WHITE);
-        linkPanel.setBounds(100, 0, 150, 80);
+        linkPanel.setBounds(100, 0, 150, 30);
 
-        JTextArea hyperlinksList = new JTextArea("Flowers 1\nFlowers 2\nGarden\nFlowers 3\nFlag");
-        hyperlinksList.setEditable(false);
+        hyperlinksList = new JComboBox<>(new String[]{"-"});
         hyperlinksList.setFont(controlsFont);
-        hyperlinksList.setMargin(new Insets(2, 5, 2, 0));
+        hyperlinksList.setBounds(0, 0, 150, 30);
+        hyperlinksList.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(ItemEvent e) {
+                if (!triggerListListener){
+                    return;
+                }
 
-        JScrollPane hyperlinksScroll = new JScrollPane(hyperlinksList);
-        hyperlinksScroll.setBorder(BorderFactory.createLineBorder(Color.BLACK, 3));
-        hyperlinksScroll.setBounds(0, 0, 150, 80);
-        hyperlinksScroll.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED);
+                //when a link is selected that is not the current link, switch the current link to that one
+                if (e.getStateChange() == ItemEvent.SELECTED){
+                    if (!e.getItem().equals("-")){
+                        if (currentLink.equals("") || boxDraw.isConnected(currentLink)){ //switching to a connected link
+                            currentLink = (String) e.getItem();
+                            currentFrameP = boxDraw.getHyperlink(currentLink).startFrame;
+                            frameP.setText("" + currentFrameP);
+                        }else{ //switching from an unconnected link
+                            triggerListListener = false;
 
-        linkPanel.add(hyperlinksScroll);
+                            if (stopEditingCurrentLink()){
+                                boxDraw.removeLink(currentLink);
+                                hyperlinksList.removeItem(currentLink);
+
+                                currentLink = (String) e.getItem();
+                                currentFrameP = boxDraw.getHyperlink(currentLink).startFrame;
+                                frameP.setText("" + currentFrameP);
+                            }else{ //continue editing link
+                                hyperlinksList.setSelectedItem(currentLink);
+                            }
+
+                            triggerListListener = true;
+                        }
+                    }else{ //switching to no active link
+                        if (boxDraw.isConnected(currentLink)){
+                            currentLink = "";
+                        }else{ //switching from unconnected link
+                            triggerListListener = false;
+
+                            if (stopEditingCurrentLink()){ //4a
+                                boxDraw.removeLink(currentLink);
+                                hyperlinksList.removeItem(currentLink);
+                                currentLink = "";
+                            }else{
+                                hyperlinksList.setSelectedItem(currentLink);
+                            }
+
+                            triggerListListener = true;
+                        }
+                    }
+
+                    boxDraw.repaint();
+                }
+            }
+        });
+
+        linkPanel.add(hyperlinksList);
 
         controlC.add(linkPanel);
         controlC.add(controlCLabel);
@@ -255,9 +334,11 @@ public class VideoTool {
         controlE.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                triggerListListener = false;
                 boxDraw.setFrames(currentFrameP, currentFrameS); //connect the hyperlink to the secondary video
                 currentLink = "";
-                System.out.println(boxDraw.hyperlinks); //temp
+                hyperlinksList.setSelectedItem("-");
+                triggerListListener = true;
             }
         });
 
@@ -269,6 +350,14 @@ public class VideoTool {
         controlF.setFont(controlsFont);
         controlF.setMargin(buttonInsets);
         controlF.setBounds(controlE.getX()+100, 15, 80, 70);
+
+        controlF.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                System.out.println(boxDraw.hyperlinks); //temp
+                System.out.println("\"" + currentLink + "\"");
+            }
+        });
 
         controlPanel.add(controlF);
         mainPanel.add(controlPanel);
@@ -323,7 +412,7 @@ public class VideoTool {
         minus1P.setMargin(buttonInsets);
         minus1P.setFont(controlsFont);
 
-        final JTextField frameP = new JTextField("1");
+        frameP = new JTextField("1");
         frameP.setBounds(148, 10, 56, 40);
         frameP.setHorizontalAlignment(SwingConstants.CENTER);
         frameP.setFont(controlsFont);
@@ -512,6 +601,12 @@ public class VideoTool {
                 currentFrameS = 1;
             }
         }
+    }
+
+    //false means don't change the current link, no/cancel was pressed on the dialog
+    public boolean stopEditingCurrentLink(){
+        return JOptionPane.showConfirmDialog(window, "Do you want to stop editing the current" +
+                " hyperlink: " + currentLink + "?") == JOptionPane.OK_OPTION;
     }
 
 
