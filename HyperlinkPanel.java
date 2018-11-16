@@ -11,7 +11,7 @@ import java.awt.geom.Rectangle2D;
 import java.util.HashMap;
 import java.util.Map;
 
-public class BoxDrawingPanel extends JPanel {
+public class HyperlinkPanel extends JPanel {
     int width = 352;
     int height = 288;
     int cornerSize = 8;
@@ -22,7 +22,7 @@ public class BoxDrawingPanel extends JPanel {
 
     BoxMouseAdapter mAdapter = new BoxMouseAdapter();
 
-    BoxDrawingPanel(){
+    HyperlinkPanel(){
         addMouseListener(mAdapter);
         addMouseMotionListener(mAdapter);
     }

@@ -9,7 +9,6 @@ import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import javax.swing.*;
-import javax.swing.filechooser.FileNameExtensionFilter;
 
 
 public class VideoTool {
@@ -27,7 +26,7 @@ public class VideoTool {
     JLabel primaryFrame;
     JLabel secondaryFrame;
 
-    BoxDrawingPanel boxDraw;
+    HyperlinkPanel hPanel;
     JComboBox<String> hyperlinksList;
     boolean triggerListListener = true; //when adding items to the hyperlink list, don't trigger the itemListener
 
@@ -153,7 +152,7 @@ public class VideoTool {
             JFileChooser chooser = new JFileChooser(startingDir);
 
             ControlAListener(){
-                chooser.setFileFilter(new FileNameExtensionFilter("*.avi", "avi"));
+                chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
             }
 
             @Override
@@ -163,35 +162,37 @@ public class VideoTool {
 
                     if (value == JFileChooser.APPROVE_OPTION){
                         primaryFilename = chooser.getSelectedFile().getAbsolutePath();
-                        primaryFilename = primaryFilename.substring(0, primaryFilename.indexOf('.'));
+                        primaryFilename += primaryFilename.substring(primaryFilename.lastIndexOf('\\'));
 
                         loadVideo(0);
 
                         chooser.setCurrentDirectory(new File(startingDir));
+                        chooser.setSelectedFile(new File(""));
                     }
                 }else if (e.getSource() == importSecondary){
                     int value = chooser.showOpenDialog(null);
 
                     if (value == JFileChooser.APPROVE_OPTION){
                         secondaryFilename = chooser.getSelectedFile().getAbsolutePath();
-                        secondaryFilename = secondaryFilename.substring(0, secondaryFilename.indexOf('.'));
+                        secondaryFilename += secondaryFilename.substring(secondaryFilename.lastIndexOf('\\'));
 
                         loadVideo(1);
 
                         chooser.setCurrentDirectory(new File(startingDir));
+                        chooser.setSelectedFile(new File(""));
                     }
                 }else{ //create hyperlink
                     if (primaryVideoLoaded && secondaryVideoLoaded){
                         triggerListListener = false;
 
                         if (!currentLink.equals("")){ //if a hyperlink is currently being edited
-                            if (!boxDraw.isConnected(currentLink)){
+                            if (!hPanel.isConnected(currentLink)){
                                 if (!stopEditingCurrentLink()){
                                     triggerListListener = true;
                                     return;
                                 }else{ //remove current hyperlink if it was not connected yet, ok was pressed
                                     hyperlinksList.removeItem(currentLink);
-                                    boxDraw.removeLink(currentLink);
+                                    hPanel.removeLink(currentLink);
                                     currentLink = "";
                                 }
                             }
@@ -213,7 +214,7 @@ public class VideoTool {
                         }
 
                         currentLink = linkName;
-                        boxDraw.addHyperlink(linkName, primaryFilename, secondaryFilename, currentFrameP, selectColor());
+                        hPanel.addHyperlink(linkName, primaryFilename, secondaryFilename, currentFrameP, selectColor());
                         hyperlinksList.addItem(linkName);
                         hyperlinksList.setSelectedItem(linkName);
 
@@ -274,19 +275,19 @@ public class VideoTool {
                 //when a link is selected that is not the current link, switch the current link to that one
                 if (e.getStateChange() == ItemEvent.SELECTED){
                     if (!e.getItem().equals("-")){
-                        if (currentLink.equals("") || boxDraw.isConnected(currentLink)){ //switching to a connected link
+                        if (currentLink.equals("") || hPanel.isConnected(currentLink)){ //switching to a connected link
                             currentLink = (String) e.getItem();
-                            currentFrameP = boxDraw.getHyperlink(currentLink).startFrame;
+                            currentFrameP = hPanel.getHyperlink(currentLink).startFrame;
                             frameP.setText("" + currentFrameP);
                         }else{ //switching from an unconnected link
                             triggerListListener = false;
 
                             if (stopEditingCurrentLink()){
-                                boxDraw.removeLink(currentLink);
+                                hPanel.removeLink(currentLink);
                                 hyperlinksList.removeItem(currentLink);
 
                                 currentLink = (String) e.getItem();
-                                currentFrameP = boxDraw.getHyperlink(currentLink).startFrame;
+                                currentFrameP = hPanel.getHyperlink(currentLink).startFrame;
                                 frameP.setText("" + currentFrameP);
                             }else{ //continue editing link
                                 hyperlinksList.setSelectedItem(currentLink);
@@ -295,13 +296,13 @@ public class VideoTool {
                             triggerListListener = true;
                         }
                     }else{ //switching to no active link
-                        if (boxDraw.isConnected(currentLink)){
+                        if (hPanel.isConnected(currentLink)){
                             currentLink = "";
                         }else{ //switching from unconnected link
                             triggerListListener = false;
 
                             if (stopEditingCurrentLink()){ //4a
-                                boxDraw.removeLink(currentLink);
+                                hPanel.removeLink(currentLink);
                                 hyperlinksList.removeItem(currentLink);
                                 currentLink = "";
                             }else{
@@ -312,7 +313,7 @@ public class VideoTool {
                         }
                     }
 
-                    boxDraw.repaint();
+                    hPanel.repaint();
                 }
             }
         });
@@ -335,7 +336,7 @@ public class VideoTool {
             @Override
             public void actionPerformed(ActionEvent e) {
                 triggerListListener = false;
-                boxDraw.setFrames(currentFrameP, currentFrameS); //connect the hyperlink to the secondary video
+                hPanel.setFrames(currentFrameP, currentFrameS); //connect the hyperlink to the secondary video
                 currentLink = "";
                 hyperlinksList.setSelectedItem("-");
                 triggerListListener = true;
@@ -354,7 +355,7 @@ public class VideoTool {
         controlF.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                System.out.println(boxDraw.hyperlinks); //temp
+                System.out.println(hPanel.hyperlinks); //temp
                 System.out.println("\"" + currentLink + "\"");
             }
         });
@@ -382,11 +383,11 @@ public class VideoTool {
         primaryFrame = new JLabel();
         primaryFrame.setBounds(0, 0, width, height);
 
-        boxDraw = new BoxDrawingPanel();
-        boxDraw.setBounds(0, 0, width, height);
-        boxDraw.setOpaque(false);
+        hPanel = new HyperlinkPanel();
+        hPanel.setBounds(0, 0, width, height);
+        hPanel.setOpaque(false);
 
-        primaryFramePanel.add(boxDraw);
+        primaryFramePanel.add(hPanel);
         primaryFramePanel.add(primaryFrame);
         primaryPanel.add(primaryFramePanel);
 
@@ -441,7 +442,7 @@ public class VideoTool {
             public void actionPerformed(ActionEvent e) {
                 currentFrameP -= 10;
                 frameP.setText("" + currentFrameP);
-                boxDraw.repaint();
+                hPanel.repaint();
             }
         });
 
@@ -450,7 +451,7 @@ public class VideoTool {
             public void actionPerformed(ActionEvent e) {
                 currentFrameP += 10;
                 frameP.setText("" + currentFrameP);
-                boxDraw.repaint();
+                hPanel.repaint();
             }
         });
 
@@ -531,7 +532,7 @@ public class VideoTool {
             public void actionPerformed(ActionEvent e) {
                 currentFrameS += 10;
                 frameS.setText("" + currentFrameS);
-                boxDraw.repaint();
+                hPanel.repaint();
             }
         });
 
@@ -540,7 +541,7 @@ public class VideoTool {
             public void actionPerformed(ActionEvent e) {
                 currentFrameS += 10;
                 frameS.setText("" + currentFrameS);
-                boxDraw.repaint();
+                hPanel.repaint();
             }
         });
 
@@ -583,12 +584,12 @@ public class VideoTool {
         if (img != null){
             if (debug){
                 if (type == 0) {
-                    System.out.print("Importing primary");
+                    System.out.print("Selecting primary video");
                 }else{
-                    System.out.print("Importing secondary");
+                    System.out.print("Selecting secondary video");
                 }
 
-                System.out.println(" video: " + fileName + ".avi");
+                System.out.println(" directory: " + fileName.substring(0, fileName.lastIndexOf("\\")));
             }
 
             if (type == 0) {
