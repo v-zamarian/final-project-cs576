@@ -16,8 +16,8 @@ public class HyperlinkPanel extends JPanel {
     int height = 288;
     int cornerSize = 8;
 
-    HashMap<String, Hyperlink> hyperlinks = new HashMap<>();
-    HashMap<String, Rectangle2D[]> hyperlinkBoxes = new HashMap<>();
+    private HashMap<String, Hyperlink> hyperlinks = new HashMap<>();
+    private HashMap<String, Rectangle2D[]> hyperlinkBoxes = new HashMap<>();
     Rectangle2D s = new Rectangle2D.Double(); //box itself
 
     BoxMouseAdapter mAdapter = new BoxMouseAdapter();
@@ -43,18 +43,22 @@ public class HyperlinkPanel extends JPanel {
         return hyperlinks.get(linkName);
     }
 
-    void setFrames(int primaryEnd, int secondaryStart){
+    HashMap getHyperlinkList(){
+        return hyperlinks;
+    }
+
+    int setFrames(int primaryEnd, int secondaryStart){
         if (VideoTool.currentLink.equals("")){
-            return;
+            return 2;
         }
 
-        hyperlinks.get(VideoTool.currentLink).setFrames(primaryEnd, secondaryStart);
-
         repaint();
+
+        return hyperlinks.get(VideoTool.currentLink).setFrames(primaryEnd, secondaryStart) ? 1 : 0;
     }
 
     private void setBoxParams(){
-        if (VideoTool.currentLink.equals("")){
+        if (VideoTool.currentLink.equals("") || isConnected(VideoTool.currentLink)){
             return;
         }
 
@@ -67,7 +71,11 @@ public class HyperlinkPanel extends JPanel {
         int boxWidth = (int) Math.abs(points[1].getCenterX() - points[0].getCenterX());
         int boxHeight = (int) Math.abs(points[1].getCenterY() - points[0].getCenterY());
 
-        hyperlinks.get(VideoTool.currentLink).setBoxParams(new Point(boxXPos, boxYPos), boxWidth, boxHeight);
+        if (VideoTool.currentFrameP == hyperlinks.get(VideoTool.currentLink).startFrame){
+            hyperlinks.get(VideoTool.currentLink).setBoxParams(new Point(boxXPos, boxYPos), boxWidth, boxHeight);
+        }else{
+            hyperlinks.get(VideoTool.currentLink).setRates(new Point(boxXPos, boxYPos), boxWidth, boxHeight, VideoTool.currentFrameP);
+        }
     }
 
     //checks if the current hyperlink being edited has been connected to a secondary video yet
@@ -125,6 +133,8 @@ public class HyperlinkPanel extends JPanel {
 
             g2.draw(s);
         }
+
+        setBoxParams();
     }
 
     class BoxMouseAdapter extends MouseAdapter {
@@ -168,8 +178,6 @@ public class HyperlinkPanel extends JPanel {
         public void mouseReleased(MouseEvent e){
             pos = -1;
             e.getComponent().setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-
-            setBoxParams();
         }
 
         @Override

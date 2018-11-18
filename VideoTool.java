@@ -27,6 +27,7 @@ public class VideoTool {
     JLabel secondaryFrame;
 
     HyperlinkPanel hPanel;
+    HyperlinkVideoPanel vPanel;
     JComboBox<String> hyperlinksList;
     boolean triggerListListener = true; //when adding items to the hyperlink list, don't trigger the itemListener
 
@@ -163,6 +164,8 @@ public class VideoTool {
                     if (value == JFileChooser.APPROVE_OPTION){
                         primaryFilename = chooser.getSelectedFile().getAbsolutePath();
                         primaryFilename += primaryFilename.substring(primaryFilename.lastIndexOf('\\'));
+                        primaryFilename = primaryFilename.replace(startingDir, "");
+                        //only want subdirectories starting from the current directory
 
                         loadVideo(0);
 
@@ -175,6 +178,7 @@ public class VideoTool {
                     if (value == JFileChooser.APPROVE_OPTION){
                         secondaryFilename = chooser.getSelectedFile().getAbsolutePath();
                         secondaryFilename += secondaryFilename.substring(secondaryFilename.lastIndexOf('\\'));
+                        secondaryFilename = secondaryFilename.replace(startingDir, "");
 
                         loadVideo(1);
 
@@ -335,10 +339,24 @@ public class VideoTool {
         controlE.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+                if (currentLink.equals("")){
+                    return;
+                }
+
                 triggerListListener = false;
-                hPanel.setFrames(currentFrameP, currentFrameS); //connect the hyperlink to the secondary video
+
+                if (!hPanel.isConnected(currentLink)) {
+                    if (hPanel.setFrames(currentFrameP, currentFrameS) == 0) { //connect the hyperlink to the secondary video
+                        JOptionPane.showMessageDialog(window, "Hyperlink start frame cannot be less than the end frame!",
+                                "Error", JOptionPane.ERROR_MESSAGE);
+                        triggerListListener = true;
+                        return;
+                    }
+                }
+
                 currentLink = "";
                 hyperlinksList.setSelectedItem("-");
+                hPanel.repaint();
                 triggerListListener = true;
             }
         });
@@ -355,8 +373,10 @@ public class VideoTool {
         controlF.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                System.out.println(hPanel.hyperlinks); //temp
+                System.out.println(hPanel.getHyperlinkList()); //temp
                 System.out.println("\"" + currentLink + "\"");
+
+                vPanel.loadLinks(hPanel.getHyperlinkList()); //testing for displaying hyperlink boxes while playing video
             }
         });
 
@@ -455,6 +475,15 @@ public class VideoTool {
             }
         });
 
+        plus100P.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                currentFrameP += 100;
+                frameP.setText("" + currentFrameP);
+                hPanel.repaint();
+            }
+        });
+
         controlB.add(minus100P);
         controlB.add(minus10P);
         controlB.add(minus1P);
@@ -479,6 +508,12 @@ public class VideoTool {
 
         secondaryFrame = new JLabel();
         secondaryFrame.setBounds(0, 0, width, height);
+
+        vPanel = new HyperlinkVideoPanel();
+        vPanel.setBounds(0, 0, width, height);
+        vPanel.setOpaque(false);
+
+        secondaryFramePanel.add(vPanel);
         secondaryFramePanel.add(secondaryFrame);
         secondaryPanel.add(secondaryFramePanel);
 
@@ -526,25 +561,6 @@ public class VideoTool {
         //TODO: add button listeners here
         //also add listener for changing the frame number
 
-        //only for testing drawing boxes at correct frames
-        minus10S.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                currentFrameS += 10;
-                frameS.setText("" + currentFrameS);
-                hPanel.repaint();
-            }
-        });
-
-        plus10S.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                currentFrameS += 10;
-                frameS.setText("" + currentFrameS);
-                hPanel.repaint();
-            }
-        });
-
         controlD.add(minus100S);
         controlD.add(minus10S);
         controlD.add(minus1S);
@@ -579,7 +595,7 @@ public class VideoTool {
             fileName = secondaryFilename;
         }
 
-        BufferedImage img = readFrame(fileName + "0001.rgb");
+        BufferedImage img = readFrame(startingDir + fileName + "0001.rgb");
 
         if (img != null){
             if (debug){
@@ -589,7 +605,7 @@ public class VideoTool {
                     System.out.print("Selecting secondary video");
                 }
 
-                System.out.println(" directory: " + fileName.substring(0, fileName.lastIndexOf("\\")));
+                System.out.println(" directory: ." + fileName.substring(0, fileName.lastIndexOf("\\")));
             }
 
             if (type == 0) {
