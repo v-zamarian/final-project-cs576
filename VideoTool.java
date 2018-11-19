@@ -9,6 +9,7 @@ import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
 import javax.swing.*;
+import javax.swing.colorchooser.AbstractColorChooserPanel;
 
 
 public class VideoTool {
@@ -36,6 +37,7 @@ public class VideoTool {
     int currentFrameS = -1; //keeps track of the current frame in the secondary video
 
     JTextField frameP;
+    JPanel linkButtonPanel;
 
     private BufferedImage readFrame(String imageName){
         BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
@@ -160,6 +162,7 @@ public class VideoTool {
             public void actionPerformed(ActionEvent e){
                 if (e.getSource() == importPrimary){
                     int value = chooser.showOpenDialog(null);
+                    chooser.setCurrentDirectory(new File(startingDir));
 
                     if (value == JFileChooser.APPROVE_OPTION){
                         primaryFilename = chooser.getSelectedFile().getAbsolutePath();
@@ -168,12 +171,10 @@ public class VideoTool {
                         //only want subdirectories starting from the current directory
 
                         loadVideo(0);
-
-                        chooser.setCurrentDirectory(new File(startingDir));
-                        chooser.setSelectedFile(new File(""));
                     }
                 }else if (e.getSource() == importSecondary){
                     int value = chooser.showOpenDialog(null);
+                    chooser.setCurrentDirectory(new File(startingDir));
 
                     if (value == JFileChooser.APPROVE_OPTION){
                         secondaryFilename = chooser.getSelectedFile().getAbsolutePath();
@@ -181,9 +182,6 @@ public class VideoTool {
                         secondaryFilename = secondaryFilename.replace(startingDir, "");
 
                         loadVideo(1);
-
-                        chooser.setCurrentDirectory(new File(startingDir));
-                        chooser.setSelectedFile(new File(""));
                     }
                 }else{ //create hyperlink
                     if (primaryVideoLoaded && secondaryVideoLoaded){
@@ -198,29 +196,28 @@ public class VideoTool {
                                     hyperlinksList.removeItem(currentLink);
                                     hPanel.removeLink(currentLink);
                                     currentLink = "";
+                                    enableHyperlinkButtons(false);
                                 }
                             }
                         }
 
-                        String linkName = JOptionPane.showInputDialog("Enter a name for the hyperlink:");
+                        String linkName = chooseName();
 
-                        if (linkName == null){ //cancel was pressed
+                        if (linkName == null){ //cancel pressed or invalid name given
                             return;
                         }
 
-                        //only allowing alphanumeric characters and spaces
-                        linkName = linkName.replaceAll("[^A-Za-z0-9 ]", "");
+                        Color c = selectColor();
 
-                        if (linkName.equals("")){
-                            JOptionPane.showMessageDialog(window, "Invalid link name.",
-                                    "Error", JOptionPane.ERROR_MESSAGE);
+                        if (c == null){ //cancel pressed while choosing color
                             return;
                         }
 
                         currentLink = linkName;
-                        hPanel.addHyperlink(linkName, primaryFilename, secondaryFilename, currentFrameP, selectColor());
+                        hPanel.addHyperlink(linkName, primaryFilename, secondaryFilename, currentFrameP, c);
                         hyperlinksList.addItem(linkName);
                         hyperlinksList.setSelectedItem(linkName);
+                        enableHyperlinkButtons(true);
 
                         if (debug){
                             System.out.println("Creating hyperlink: " + linkName);
@@ -255,7 +252,7 @@ public class VideoTool {
         JPanel controlC = new JPanel();
         controlC.setLayout(null);
         controlC.setBackground(Color.GRAY);
-        controlC.setBounds(controlA.getWidth()+20, 10, 250, 80);
+        controlC.setBounds(controlA.getWidth()+20, 10, 250, 100);
 
         JLabel controlCLabel = new JLabel("Select Link :");
         controlCLabel.setBounds(2, 5, 100, 20);
@@ -281,6 +278,7 @@ public class VideoTool {
                     if (!e.getItem().equals("-")){
                         if (currentLink.equals("") || hPanel.isConnected(currentLink)){ //switching to a connected link
                             currentLink = (String) e.getItem();
+                            enableHyperlinkButtons(true);
                             currentFrameP = hPanel.getHyperlink(currentLink).startFrame;
                             frameP.setText("" + currentFrameP);
                         }else{ //switching from an unconnected link
@@ -291,6 +289,7 @@ public class VideoTool {
                                 hyperlinksList.removeItem(currentLink);
 
                                 currentLink = (String) e.getItem();
+                                enableHyperlinkButtons(true);
                                 currentFrameP = hPanel.getHyperlink(currentLink).startFrame;
                                 frameP.setText("" + currentFrameP);
                             }else{ //continue editing link
@@ -302,13 +301,15 @@ public class VideoTool {
                     }else{ //switching to no active link
                         if (hPanel.isConnected(currentLink)){
                             currentLink = "";
+                            enableHyperlinkButtons(false);
                         }else{ //switching from unconnected link
                             triggerListListener = false;
 
-                            if (stopEditingCurrentLink()){ //4a
+                            if (stopEditingCurrentLink()){
                                 hPanel.removeLink(currentLink);
                                 hyperlinksList.removeItem(currentLink);
                                 currentLink = "";
+                                enableHyperlinkButtons(false);
                             }else{
                                 hyperlinksList.setSelectedItem(currentLink);
                             }
@@ -324,8 +325,84 @@ public class VideoTool {
 
         linkPanel.add(hyperlinksList);
 
+        linkButtonPanel = new JPanel();
+        linkButtonPanel.setLayout(null);
+        linkButtonPanel.setBackground(Color.GRAY);
+        linkButtonPanel.setBounds(0, 40, 250, 70);
+
+        JButton newName = new JButton("<html>Change Name</html>");
+        newName.setFont(controlsFont);
+        newName.setMargin(new Insets(2, 2, 2, 2));
+        newName.setBounds(20, 10, 70, 40);
+
+        newName.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String name = chooseName();
+
+                if (name == null){
+                    return;
+                }
+
+                //a hyperlink must be active for the button to even be pressed
+                triggerListListener = false;
+                hyperlinksList.removeItem(currentLink);
+                hyperlinksList.addItem(name);
+                hyperlinksList.setSelectedItem(name);
+
+                hPanel.renameHyperlink(currentLink, name);
+                currentLink = name;
+                triggerListListener = true;
+            }
+        });
+
+        JButton newColor = new JButton("<html>Change Color</html>");
+        newColor.setFont(controlsFont);
+        newColor.setMargin(new Insets(2, 2, 2, 2));
+        newColor.setBounds(100, 10, 70, 40);
+
+        newColor.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                Color c = selectColor();
+
+                if (c == null){
+                    return;
+                }
+
+                hPanel.changeLinkColor(currentLink, c);
+            }
+        });
+
+        JButton deleteLink = new JButton("<html>Delete Link</html>");
+        deleteLink.setFont(controlsFont);
+        deleteLink.setMargin(new Insets(2, 2, 2, 2));
+        deleteLink.setBounds(180, 10, 70, 40);
+
+        deleteLink.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                triggerListListener = false;
+
+                hPanel.removeLink(currentLink);
+                hyperlinksList.removeItem(currentLink);
+                hyperlinksList.setSelectedItem("-");
+                currentLink = "";
+                enableHyperlinkButtons(false);
+
+                triggerListListener = true;
+            }
+        });
+
+        linkButtonPanel.add(newName);
+        linkButtonPanel.add(newColor);
+        linkButtonPanel.add(deleteLink);
+
+        enableHyperlinkButtons(false);
+
         controlC.add(linkPanel);
         controlC.add(controlCLabel);
+        controlC.add(linkButtonPanel);
 
         controlPanel.add(controlC);
 
@@ -346,7 +423,7 @@ public class VideoTool {
                 triggerListListener = false;
 
                 if (!hPanel.isConnected(currentLink)) {
-                    if (hPanel.setFrames(currentFrameP, currentFrameS) == 0) { //connect the hyperlink to the secondary video
+                    if (hPanel.setFrames(currentLink, currentFrameP, currentFrameS) == 0) { //connect the hyperlink to the secondary video
                         JOptionPane.showMessageDialog(window, "Hyperlink start frame cannot be less than the end frame!",
                                 "Error", JOptionPane.ERROR_MESSAGE);
                         triggerListListener = true;
@@ -355,6 +432,7 @@ public class VideoTool {
                 }
 
                 currentLink = "";
+                enableHyperlinkButtons(false);
                 hyperlinksList.setSelectedItem("-");
                 hPanel.repaint();
                 triggerListListener = true;
@@ -582,11 +660,24 @@ public class VideoTool {
     }
 
     Color selectColor(){
-        return JColorChooser.showDialog(null, "Choose the box color", Color.RED);
+        JColorChooser colorPanel = new JColorChooser(Color.RED);
+
+        for (AbstractColorChooserPanel p : colorPanel.getChooserPanels()){
+            if (!p.getDisplayName().equals("Swatches")){
+                colorPanel.removeChooserPanel(p);
+            }
+        }
+
+        if (JOptionPane.showConfirmDialog(null, colorPanel, "Choose the box color",
+                JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE, null) == JOptionPane.OK_OPTION){
+            return colorPanel.getColor();
+        }else{
+            return null;
+        }
     }
 
     //for now this just loads the first frame of the selected video
-    public void loadVideo(int type){
+    void loadVideo(int type){
         String fileName;
 
         if (type == 0){
@@ -620,12 +711,36 @@ public class VideoTool {
         }
     }
 
+    String chooseName(){
+        String linkName = JOptionPane.showInputDialog("Enter a name for the hyperlink:");
+
+        if (linkName == null){ //cancel was pressed while choosing name
+            return linkName;
+        }
+
+        //only allowing alphanumeric characters and spaces
+        linkName = linkName.replaceAll("[^A-Za-z0-9 ]", "");
+
+        if (linkName.equals("")){
+            JOptionPane.showMessageDialog(window, "Invalid link name.",
+                    "Error", JOptionPane.ERROR_MESSAGE);
+            linkName = null;
+        }
+
+        return linkName;
+    }
+
     //false means don't change the current link, no/cancel was pressed on the dialog
-    public boolean stopEditingCurrentLink(){
+    boolean stopEditingCurrentLink(){
         return JOptionPane.showConfirmDialog(window, "Do you want to stop editing the current" +
                 " hyperlink: " + currentLink + "?") == JOptionPane.OK_OPTION;
     }
 
+    void enableHyperlinkButtons(boolean enable){
+        for(Component com : linkButtonPanel.getComponents()){
+            com.setEnabled(enable);
+        }
+    }
 
     //custom button for control A buttons
     class ControlAButton extends JButton{

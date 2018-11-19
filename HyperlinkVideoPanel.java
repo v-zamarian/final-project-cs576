@@ -1,3 +1,8 @@
+//Victor Zamarian
+//CS 576
+
+//This class is used for drawing the clickable hyperlink over the video in the video player.
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
@@ -23,10 +28,14 @@ public class HyperlinkVideoPanel extends JPanel {
 
     HyperlinkVideoPanel(){
         addMouseListener(mAdapter);
+        addMouseMotionListener(mAdapter);
     }
 
-    void loadLinks(HashMap links){
-        hyperlinks = (HashMap<String, Hyperlink>) links.clone();
+    void loadLinks(HashMap<String, Hyperlink> links){
+        for (Map.Entry<String, Hyperlink> entry : links.entrySet()){
+            hyperlinks.put(entry.getKey(), new Hyperlink(entry.getValue()));
+            currentBoxes.put(entry.getKey(), new Hyperlink(entry.getValue()));
+        }
 
         linksLoaded = true;
 
@@ -61,7 +70,6 @@ public class HyperlinkVideoPanel extends JPanel {
 
         player.start();
     }
-
 
     @Override
     protected void paintComponent(Graphics g){
@@ -99,9 +107,7 @@ public class HyperlinkVideoPanel extends JPanel {
             double width = currLink.boxWidth + (frameDiff * currLink.widthRate);
             double height = currLink.boxHeight + (frameDiff * currLink.heightRate);
 
-            Hyperlink temp = new Hyperlink(currLink);
-            temp.setBoxParams(new Point((int) cornerX, (int) cornerY), (int) width, (int) height);
-            currentBoxes.put(key, temp);
+            currentBoxes.get(key).setBoxParams(new Point((int) cornerX, (int) cornerY), (int) width, (int) height);
 
             s.setRect(cornerX, cornerY, width, height);
 
@@ -139,10 +145,13 @@ public class HyperlinkVideoPanel extends JPanel {
             if (!videoPlaying) {
                 playVideo();
             }else{
+                //in the video player this would open a new player with the linked video at the specified frame
                 String linkName = getLinkAtLocation(e.getPoint());
 
-                if (!linkName.equals("")){
+                if (!linkName.equals("")){ //testing
                     System.out.println("Clicked hyperlink: " + linkName);
+                    System.out.println("It links to: " + hyperlinks.get(linkName).secondaryName +
+                            " at frame: " + hyperlinks.get(linkName).secondFrame);
                 }
             }
         }

@@ -1,7 +1,7 @@
 //Victor Zamarian
 //CS 576
 
-//This class is used for drawing hyperlink boxes on top of the primary video frames
+//This class is used for drawing hyperlink boxes on top of the primary video frames.
 
 import javax.swing.*;
 import java.awt.*;
@@ -34,7 +34,21 @@ public class HyperlinkPanel extends JPanel {
         hyperlinkBoxes.put(linkName, new Rectangle2D[] {new Rectangle2D.Double(150, 125, cornerSize, cornerSize),
                 new Rectangle2D.Double(200, 165, cornerSize, cornerSize)} );
 
-        setBoxParams();
+        setBoxParams(linkName);
+
+        repaint();
+    }
+
+    void renameHyperlink(String oldName, String newName){
+        hyperlinks.put(newName, new Hyperlink(hyperlinks.get(oldName)));
+        hyperlinkBoxes.put(newName, hyperlinkBoxes.get(oldName));
+
+        hyperlinks.remove(oldName);
+        hyperlinkBoxes.remove(oldName);
+    }
+
+    void changeLinkColor(String linkName, Color c){
+        hyperlinks.get(linkName).boxColor = c;
 
         repaint();
     }
@@ -43,26 +57,26 @@ public class HyperlinkPanel extends JPanel {
         return hyperlinks.get(linkName);
     }
 
-    HashMap getHyperlinkList(){
+    HashMap<String, Hyperlink> getHyperlinkList(){
         return hyperlinks;
     }
 
-    int setFrames(int primaryEnd, int secondaryStart){
-        if (VideoTool.currentLink.equals("")){
+    int setFrames(String linkName, int primaryEnd, int secondaryStart){
+        if (linkName.equals("")){
             return 2;
         }
 
         repaint();
 
-        return hyperlinks.get(VideoTool.currentLink).setFrames(primaryEnd, secondaryStart) ? 1 : 0;
+        return hyperlinks.get(linkName).setFrames(primaryEnd, secondaryStart) ? 1 : 0;
     }
 
-    private void setBoxParams(){
-        if (VideoTool.currentLink.equals("") || isConnected(VideoTool.currentLink)){
+    private void setBoxParams(String linkName){
+        if (linkName.equals("") || isConnected(linkName)){
             return;
         }
 
-        Rectangle2D[] points = hyperlinkBoxes.get(VideoTool.currentLink);
+        Rectangle2D[] points = hyperlinkBoxes.get(linkName);
 
         //x,y position of box is always its top left corner
         int boxXPos = Math.min((int) points[0].getCenterX(), (int) points[1].getCenterX());
@@ -71,10 +85,10 @@ public class HyperlinkPanel extends JPanel {
         int boxWidth = (int) Math.abs(points[1].getCenterX() - points[0].getCenterX());
         int boxHeight = (int) Math.abs(points[1].getCenterY() - points[0].getCenterY());
 
-        if (VideoTool.currentFrameP == hyperlinks.get(VideoTool.currentLink).startFrame){
-            hyperlinks.get(VideoTool.currentLink).setBoxParams(new Point(boxXPos, boxYPos), boxWidth, boxHeight);
+        if (VideoTool.currentFrameP == hyperlinks.get(linkName).startFrame){
+            hyperlinks.get(linkName).setBoxParams(new Point(boxXPos, boxYPos), boxWidth, boxHeight);
         }else{
-            hyperlinks.get(VideoTool.currentLink).setRates(new Point(boxXPos, boxYPos), boxWidth, boxHeight, VideoTool.currentFrameP);
+            hyperlinks.get(linkName).setRates(new Point(boxXPos, boxYPos), boxWidth, boxHeight, VideoTool.currentFrameP);
         }
     }
 
@@ -134,7 +148,7 @@ public class HyperlinkPanel extends JPanel {
             g2.draw(s);
         }
 
-        setBoxParams();
+        setBoxParams(VideoTool.currentLink);
     }
 
     class BoxMouseAdapter extends MouseAdapter {
