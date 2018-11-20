@@ -4,12 +4,17 @@
 //This class is used for drawing the clickable hyperlink over the video in the video player.
 
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Rectangle2D;
+import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Scanner;
+
 
 public class HyperlinkVideoPanel extends JPanel {
     boolean linksLoaded = false;
@@ -31,14 +36,39 @@ public class HyperlinkVideoPanel extends JPanel {
         addMouseMotionListener(mAdapter);
     }
 
-    void loadLinks(HashMap<String, Hyperlink> links){
-        for (Map.Entry<String, Hyperlink> entry : links.entrySet()){
-            hyperlinks.put(entry.getKey(), new Hyperlink(entry.getValue()));
-            currentBoxes.put(entry.getKey(), new Hyperlink(entry.getValue()));
+    void loadLinks(){
+        JFileChooser chooser = new JFileChooser(System.getProperty("user.dir"));
+        chooser.setFileFilter(new FileNameExtensionFilter("*.hyp", "hyp"));
+
+        String inputFile;
+
+        if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION){
+            inputFile = chooser.getSelectedFile().getAbsolutePath();
+
+            System.out.println("Loading hyperlinks file: " + inputFile); //temp
+        }else{
+            return;
+        }
+
+        try {
+            Scanner in = new Scanner(new File(inputFile));
+
+            while (in.hasNext()) {
+                String lineString = in.nextLine();
+
+                Hyperlink inLink = new Hyperlink(lineString);
+                Hyperlink inLinkBoxes = new Hyperlink(lineString);
+
+                hyperlinks.put(inLink.linkName, inLink);
+                currentBoxes.put(inLinkBoxes.linkName, inLinkBoxes);
+            }
+
+            in.close();
+        } catch (IOException io){
+            System.out.println("ERROR: " + io.getMessage());
         }
 
         linksLoaded = true;
-
         repaint();
     }
 

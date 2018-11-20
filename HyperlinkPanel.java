@@ -8,8 +8,11 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Rectangle2D;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+
 
 public class HyperlinkPanel extends JPanel {
     int width = 352;
@@ -28,7 +31,7 @@ public class HyperlinkPanel extends JPanel {
     }
 
     void addHyperlink(String linkName, String p, String s, int start, Color c){
-        hyperlinks.put(linkName, new Hyperlink(p, s, start, c));
+        hyperlinks.put(linkName, new Hyperlink(linkName, p, s, start, c));
 
         //put initial box in default position
         hyperlinkBoxes.put(linkName, new Rectangle2D[] {new Rectangle2D.Double(150, 125, cornerSize, cornerSize),
@@ -103,6 +106,39 @@ public class HyperlinkPanel extends JPanel {
         hyperlinkBoxes.remove(name);
 
         repaint();
+    }
+
+    void saveHyperlinks(String originalFile){
+        //select directory to save hyperlink file to
+        //output file name is the primary video's name.hyp
+        JFileChooser chooser = new JFileChooser(System.getProperty("user.dir"));
+        chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+
+        String outputFile;
+
+        if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION){
+            originalFile = originalFile.substring(originalFile.lastIndexOf("\\"));
+
+            outputFile = chooser.getSelectedFile().getAbsolutePath() + originalFile + ".hyp";
+
+            System.out.println("Saving hyperlinks to the directory: " + outputFile); //temp
+        }else{
+            return;
+        }
+
+        //save hyperlinks to the file
+        try{
+            FileWriter out = new FileWriter(outputFile);
+
+            for (Map.Entry<String, Hyperlink> entry : hyperlinks.entrySet()) {
+                out.write(entry.getValue().toString());
+                out.write("\r\n");
+            }
+
+            out.close();
+        } catch (IOException io){
+            System.out.println("ERROR: " + io.getMessage());
+        }
     }
 
     @Override

@@ -422,8 +422,9 @@ public class VideoTool {
 
                 triggerListListener = false;
 
+                //connect the hyperlink to the secondary video
                 if (!hPanel.isConnected(currentLink)) {
-                    if (hPanel.setFrames(currentLink, currentFrameP, currentFrameS) == 0) { //connect the hyperlink to the secondary video
+                    if (hPanel.setFrames(currentLink, currentFrameP, currentFrameS) == 0) {
                         JOptionPane.showMessageDialog(window, "Hyperlink start frame cannot be less than the end frame!",
                                 "Error", JOptionPane.ERROR_MESSAGE);
                         triggerListListener = true;
@@ -452,9 +453,14 @@ public class VideoTool {
             @Override
             public void actionPerformed(ActionEvent e) {
                 System.out.println(hPanel.getHyperlinkList()); //temp
-                System.out.println("\"" + currentLink + "\"");
+                System.out.println("\"" + currentLink + "\""); //temp
 
-                vPanel.loadLinks(hPanel.getHyperlinkList()); //testing for displaying hyperlink boxes while playing video
+                //save links here
+                hPanel.saveHyperlinks(primaryFilename);
+
+                //testing for displaying hyperlink boxes while playing video
+                //this will be done in the video player
+                vPanel.loadLinks();
             }
         });
 
