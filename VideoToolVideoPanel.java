@@ -99,6 +99,10 @@ public class VideoToolVideoPanel extends JPanel {
         this.sliderBSubPanel = new VideoToolSliderPanel('B');
     }
 
+    public VideoEditPanel getVideoSubPanel(char id) {
+        return (id == 'A') ? this.videoASubPanel : this.videoBSubPanel;
+    }
+
     public void initVideoPanel() {
         c = new GridBagConstraints();
         c.fill = GridBagConstraints.HORIZONTAL;

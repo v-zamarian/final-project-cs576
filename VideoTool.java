@@ -27,16 +27,7 @@ public class VideoTool extends JFrame {
         contentPane.setLayout(gridbag);
         c.fill = GridBagConstraints.HORIZONTAL;
 
-        // Control sub-panel initialization
-        controlPanel = new VideoToolControlPanel();
-        controlPanel.initControlPanel();
-        c.weightx = 1.0;
-        c.weighty = 0.2;
-        c.gridx = 0;
-        c.gridy = 0;
-        gridbag.setConstraints(controlPanel, c);
-        contentPane.add(controlPanel);
-
+        // Video sub-panel initialization
         videoPanel = new VideoToolVideoPanel();
         videoPanel.initVideoPanel();
         c.weightx = 1.0;
@@ -45,6 +36,16 @@ public class VideoTool extends JFrame {
         c.gridy = 1;
         gridbag.setConstraints(videoPanel, c);
         contentPane.add(videoPanel);
+
+        // Control sub-panel initialization
+        controlPanel = new VideoToolControlPanel(videoPanel.getVideoSubPanel('A'), videoPanel.getVideoSubPanel('B'));
+        controlPanel.initControlPanel();
+        c.weightx = 1.0;
+        c.weighty = 0.2;
+        c.gridx = 0;
+        c.gridy = 0;
+        gridbag.setConstraints(controlPanel, c);
+        contentPane.add(controlPanel);
 
         // Last display steps
         this.setSize(750, 500);
