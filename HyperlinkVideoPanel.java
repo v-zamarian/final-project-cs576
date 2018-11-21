@@ -121,7 +121,7 @@ public class HyperlinkVideoPanel extends JPanel {
                     continue;
                 }
 
-                if (currentFrame > currLink.endFrame){
+                if (currentFrame > currLink.endFrame){ //hyperlink box is no longer needed
                     currentBoxes.remove(key);
                     continue;
                 }
@@ -152,7 +152,8 @@ public class HyperlinkVideoPanel extends JPanel {
 
                 Rectangle2D box = new Rectangle2D.Double(link.corner.x, link.corner.y, link.boxWidth, link.boxHeight);
 
-                if (box.getBounds2D().contains(p.getX(), p.getY())){
+                //link is only clickable inside its bounds and if it is currently active
+                if (box.getBounds2D().contains(p.getX(), p.getY()) && currentFrame >= link.startFrame){
                     return entry.getKey();
                 }
             }
