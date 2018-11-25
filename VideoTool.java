@@ -55,7 +55,8 @@ public class VideoTool extends JFrame {
     public static void main(String args[]){
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-                (new VideoTool()).displayGUI(); //this file doesn't/shouldn't depend on command line arguments
+                //(new VideoTool()).displayGUI();
+                (new VideoPlaybackTool("London/LondonOne/LondonOne.avi")).displayGUI();
             }
         });
     }
