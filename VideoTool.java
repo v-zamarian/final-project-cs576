@@ -38,7 +38,7 @@ public class VideoTool extends JFrame {
         contentPane.add(videoPanel);
 
         // Control sub-panel initialization
-        controlPanel = new VideoToolControlPanel(videoPanel.getVideoSubPanel('A'), videoPanel.getVideoSubPanel('B'));
+        controlPanel = new VideoToolControlPanel(videoPanel);
         controlPanel.initControlPanel();
         c.weightx = 1.0;
         c.weighty = 0.2;
@@ -55,8 +55,8 @@ public class VideoTool extends JFrame {
     public static void main(String args[]){
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
-                //(new VideoTool()).displayGUI();
-                (new VideoPlaybackTool("London/LondonOne/LondonOne.avi")).displayGUI();
+                (new VideoTool()).displayGUI();
+                //(new VideoPlaybackTool("London/LondonOne/LondonOne.avi")).displayGUI();
             }
         });
     }

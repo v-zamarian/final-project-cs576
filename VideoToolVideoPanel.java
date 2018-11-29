@@ -13,6 +13,11 @@ public class VideoToolVideoPanel extends JPanel {
     private VideoToolSliderPanel sliderASubPanel;
     private VideoToolSliderPanel sliderBSubPanel;
     private boolean textFieldChanged = false;
+    private String currentLink;
+
+    final private static int IMG_WIDTH = 352;
+    final private static int IMG_HEIGHT = 288;
+
 
     // JTextField Listener
     private class TextFieldListener implements ActionListener {
@@ -92,15 +97,22 @@ public class VideoToolVideoPanel extends JPanel {
     public VideoToolVideoPanel() {
         // Init video panel
         this.videoASubPanel = new VideoEditPanel('A', "London/LondonOne/LondonOne.avi");
-        this.videoBSubPanel = new VideoEditPanel('B', "London/LondonOne/LondonOne.avi");
+        this.videoBSubPanel = new VideoEditPanel('B', "London/LondonTwo/LondonTwo.avi");
 
         // Init slider panel
         this.sliderASubPanel = new VideoToolSliderPanel('A');
         this.sliderBSubPanel = new VideoToolSliderPanel('B');
+
+        // Init cross-panel hyperlink metadata
+        this.currentLink = "";
     }
 
     public VideoEditPanel getVideoSubPanel(char id) {
-        return (id == 'A') ? this.videoASubPanel : this.videoBSubPanel;
+        return (id == 'A') ? videoASubPanel : videoBSubPanel;
+    }
+
+    public VideoToolSliderPanel getSliderSubPanel(char id) {
+        return (id == 'A') ? sliderASubPanel : sliderBSubPanel;
     }
 
     public void initVideoPanel() {
@@ -166,9 +178,16 @@ public class VideoToolVideoPanel extends JPanel {
         c.gridy = y;
 
         if (id == 'A') {
+            // create and add hyperlinkPanel to videoASubPanel
+            HyperlinkPanel hyperlinkPanel = new HyperlinkPanel();
+            hyperlinkPanel.setPreferredSize(new Dimension(IMG_WIDTH, IMG_HEIGHT));
+            hyperlinkPanel.setOpaque(false);
+            videoASubPanel.setHyperlinkPanel(hyperlinkPanel);
+
             JLabel img = new JLabel(new ImageIcon(videoASubPanel.getFrame()));
             videoASubPanel.add(img);
             videoASubPanel.setPreferredSize(new Dimension(352, 288));
+            this.add(videoASubPanel.getHyperlinkPanel(), c);
             this.add(videoASubPanel, c);
         } else {
             JLabel img = new JLabel(new ImageIcon(videoBSubPanel.getFrame()));
@@ -201,5 +220,13 @@ public class VideoToolVideoPanel extends JPanel {
             sliderBSubPanel.add(targetSlider);
             this.add(sliderBSubPanel, c);
         }
+    }
+
+    public String getCurrentLink() {
+        return this.currentLink;
+    }
+
+    public void setCurrentLink(String newLink) {
+        this.currentLink = newLink;
     }
 }
