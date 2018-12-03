@@ -1,11 +1,11 @@
 import java.awt.image.BufferedImage;
-import java.io.IOException;
 
 public class Video {
     private BufferedImage[] frames;
     private String filepath;
     private String videoPathName;
     private String videoName;
+    private String videoDirectory;
 
     final private int NUM_FRAMES = 9000;
 
@@ -15,8 +15,16 @@ public class Video {
         // get filepath without extension
         int p = filepath.lastIndexOf(".");
         this.videoPathName = filepath.substring(0, p);
-        this.videoName = filepath.substring(p);
         this.filepath = videoPathName;
+
+        if (System.getProperty("os.name").startsWith("Windows")) {
+            p = filepath.lastIndexOf("\\");
+        } else {
+            p = filepath.lastIndexOf("/");
+        }
+        this.videoName = filepath.substring(p);
+        this.videoDirectory = filepath.substring(0, p);
+        System.out.println("VIDEO NAME: " + this.videoName);
 
         // load frames into buffer
 ////        for (int ii = 0; ii < NUM_FRAMES; ii++) {
@@ -50,6 +58,10 @@ public class Video {
 
     public String getFramePath(int frameNumber) {
         return String.format(this.filepath + "%04d.rgb", frameNumber);
+    }
+
+    public String getVideoDirectory() {
+        return this.videoDirectory;
     }
 
     public BufferedImage[] getFrames() {

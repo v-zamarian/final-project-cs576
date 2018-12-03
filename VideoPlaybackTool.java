@@ -65,10 +65,16 @@ public class VideoPlaybackTool extends JFrame {
         int p = filepath.lastIndexOf(".");
         String basePathName = filepath.substring(0, p);
         this.audio = new AudioWrapper(basePathName);
+        if (fromLink) {
+            int audioFrame = (frameNumber*audio.getAudio().getFrameLength())/TOTAL_FRAMES;
+            System.out.println("AUDIO FRAME: " + audioFrame);
+            audio.getAudio().setFramePosition(audioFrame);
+        }
 
         this.c = new GridBagConstraints();
         this.controlPanel = new VideoPlaybackControlPanel();
         this.videoImageLabel = new JLabel(new ImageIcon(this.video.getFrame(frameNumber)));
+        System.out.println("VIDEO FRAME NUMBER: " + frameNumber);
         this.infoPanel = new JPanel();
         this.hyperlinkVideoPanel = new HyperlinkVideoPanel();
 
@@ -236,7 +242,15 @@ public class VideoPlaybackTool extends JFrame {
         hyperlinkVideoPanel.setOpaque(false);
         hyperlinkVideoPanel.setPreferredSize(new Dimension(352, 288));
 
-        boolean linksLoaded = (fromLink) ? hyperlinkVideoPanel.loadLinks(video.getFilepath()) : hyperlinkVideoPanel.loadLinks(null);
+        // load links depending on if caller is edit panel or another video playback tool
+        boolean linksLoaded;
+        if (fromLink) {
+            String linkPath = video.getVideoDirectory() + video.getVideoName();
+
+            linksLoaded = hyperlinkVideoPanel.loadLinks(linkPath);
+        } else {
+            linksLoaded = hyperlinkVideoPanel.loadLinks(null);
+        }
         if (!fromLink && !linksLoaded) {
             throw new Exception("User cancelled operation");
         }
@@ -251,7 +265,6 @@ public class VideoPlaybackTool extends JFrame {
         pause();
 
         try {
-            System.out.println("VIDEO TO PLAY: " + link.getSecondaryName());
             (new VideoPlaybackTool(link.getSecondaryName(), link.getSecondaryStartFrame(), true)).displayGUI();
         } catch (Exception e) {
             e.printStackTrace();
