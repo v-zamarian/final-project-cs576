@@ -1,7 +1,13 @@
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.File;
+import java.io.FilenameFilter;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Scanner;
 
 public class VideoPlaybackTool extends JFrame {
     private Video video;
@@ -9,10 +15,15 @@ public class VideoPlaybackTool extends JFrame {
     private VideoPlaybackControlPanel controlPanel;
     private JLabel videoPanel;
     private JPanel infoPanel;
-    private Timer playbackTimer;
+    private Thread playbackThread;
     private int currentFrameNumber;
+    private String hyperlinkPath;
+    private HyperlinkVideoPanel hyperlinkVideoPanel;
+    private boolean pauseRequested;
+    private boolean stopRequested;
+    private boolean isPlaying;
 
-    final private int FRAMES_PER_SECOND = 31;
+    final private int FRAMES_PER_SECOND = 30;
     final private int TOTAL_FRAMES = 9000;
     final private int DELAY_THRESHOLD = 5;
 
@@ -30,32 +41,9 @@ public class VideoPlaybackTool extends JFrame {
         }
     }
 
-    private class TimerListener implements ActionListener {
-        @Override
-        public void actionPerformed(ActionEvent e) {
-            if (currentFrameNumber == TOTAL_FRAMES) {
-                resetFrames();
-                revalidate();
-                repaint();
-
-                return;
-            }
-
-            videoPanel.setIcon(new ImageIcon(video.getFrame(currentFrameNumber)));
-            ((JLabel) infoPanel.getComponent(0)).setText("Playing frame " + currentFrameNumber);
-//            if (Math.abs((1470*currentFrameNumber) - audio.getAudio().getFramePosition()) > DELAY_THRESHOLD) {
-//                audio.getAudio().setFramePosition(1470*currentFrameNumber);
-//            }
-
-            revalidate();
-            repaint();
-            currentFrameNumber++;
-        }
-    }
-
-    public VideoPlaybackTool(String filepath) {
+    public VideoPlaybackTool(String filepath, String hyperlinkPath) {
         this.setTitle("Hyperlinked Video Player");
-        this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         this.video = new Video(filepath);
 
         // init AudioWrapper object
@@ -66,11 +54,12 @@ public class VideoPlaybackTool extends JFrame {
         this.controlPanel = new VideoPlaybackControlPanel();
         this.videoPanel = new JLabel(new ImageIcon(this.video.getFrame(1)));
         this.infoPanel = new JPanel();
-
-        this.playbackTimer = new Timer(1000/FRAMES_PER_SECOND, new TimerListener());
-        this.playbackTimer.setInitialDelay(0);
+        this.hyperlinkVideoPanel = new HyperlinkVideoPanel();
 
         this.currentFrameNumber = 1;
+        this.hyperlinkPath = hyperlinkPath;
+
+        this.isPlaying = false;
     }
 
     public void displayGUI() {
@@ -86,6 +75,13 @@ public class VideoPlaybackTool extends JFrame {
         c.gridy = 0;
         gridbag.setConstraints(videoPanel, c);
         contentPane.add(videoPanel);
+
+        // Hyperlink Video Panel
+        //hyperlinkVideoPanel.setOpaque(false);
+        hyperlinkVideoPanel.setBackground(Color.BLUE);
+        gridbag.setConstraints(hyperlinkVideoPanel, c);
+        contentPane.add(hyperlinkVideoPanel);
+        hyperlinkVideoPanel.loadLinks(hyperlinkPath);
 
         // control sub-panel
         controlPanel.initSubPanel(new PlaybackListener());
@@ -111,24 +107,114 @@ public class VideoPlaybackTool extends JFrame {
     }
 
     public void play() {
-        ((JLabel) infoPanel.getComponent(0)).setText("Playing Frame " + this.currentFrameNumber);
-        playbackTimer.start();
-        audio.play();
+        if (isPlaying) {
+            return;
+        }
+
+        if (pauseRequested) {
+            pauseRequested = false;
+            synchronized(playbackThread) {
+                playbackThread.notify();
+            }
+        }
+
+        playbackThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                double updateTime = 1000 / (double) FRAMES_PER_SECOND;
+                long startTime = System.currentTimeMillis();
+                long endTime = 0;
+
+                isPlaying = true;
+                audio.play();
+                while (true) {
+                    if (stopRequested) {
+                        break;
+                    }
+
+                    if (pauseRequested) {
+                        try {
+                            synchronized(this) {
+                                while (pauseRequested) {
+                                    this.wait();
+                                }
+
+                                isPlaying = true;
+                            }
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    }
+
+                    if ((endTime - startTime) >= updateTime){
+                        ((JLabel) infoPanel.getComponent(0)).setText("Playing Frame " + currentFrameNumber);
+
+                        if (currentFrameNumber == TOTAL_FRAMES) {
+                            resetFrames();
+                            revalidate();
+                            repaint();
+
+                            return;
+                        }
+
+                        if (currentFrameNumber == 1) {
+                            System.out.println("test");
+                        }
+
+                        if (currentFrameNumber == TOTAL_FRAMES) {
+                            audio.stop();
+                            break;
+                        }
+
+                        videoPanel.setIcon(new ImageIcon(video.getFrame(currentFrameNumber)));
+                        ((JLabel) infoPanel.getComponent(0)).setText("Playing frame " + currentFrameNumber);
+
+                        hyperlinkVideoPanel.setCurrentFrame(currentFrameNumber);
+                        hyperlinkVideoPanel.updateHyperlinks();
+                        getContentPane().revalidate();
+                        getContentPane().repaint();
+
+                        currentFrameNumber++;
+
+                        startTime = endTime;
+                    }
+
+                    endTime = System.currentTimeMillis();
+                }
+            }
+        });
+
+        playbackThread.start();
     }
 
     public void pause() {
-        ((JLabel) infoPanel.getComponent(0)).setText("Video Paused");
+        if (!isPlaying) {
+            return;
+        }
+
+        isPlaying = false;
+        pauseRequested = true;
+        ((JLabel) infoPanel.getComponent(0)).setText("Video Paused at Frame " + currentFrameNumber);
         audio.pause();
-        playbackTimer.stop();
     }
 
     public void stop() {
-        playbackTimer.stop();
-        audio.stop();
+        isPlaying = false;
+        stopRequested = true;
+        pauseRequested = false;
+        synchronized (playbackThread) {
+            playbackThread.notify();
+        }
+
         resetFrames();
+        audio.stop();
     }
 
     private void resetFrames() {
+        isPlaying = false;
+        pauseRequested = false;
+        stopRequested = false;
+
         currentFrameNumber = 1;
         videoPanel.setIcon(new ImageIcon(video.getFrame(currentFrameNumber)));
         ((JLabel) infoPanel.getComponent(0)).setText("Video not started");

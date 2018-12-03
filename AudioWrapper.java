@@ -31,7 +31,8 @@ public class AudioWrapper {
     }
 
     public void stop() {
-        audio.close();
+        audio.stop();
+        audio.setFramePosition(0);
     }
 
     public void pause() {
@@ -40,5 +41,11 @@ public class AudioWrapper {
 
     public Clip getAudio() {
         return this.audio;
+    }
+
+    protected void finalize() throws Throwable {
+        super.finalize();
+
+        audio.close();
     }
 }

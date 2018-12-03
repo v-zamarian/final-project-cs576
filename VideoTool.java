@@ -56,7 +56,6 @@ public class VideoTool extends JFrame {
         SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 (new VideoTool()).displayGUI();
-                //(new VideoPlaybackTool("London/LondonOne/LondonOne.avi")).displayGUI();
             }
         });
     }

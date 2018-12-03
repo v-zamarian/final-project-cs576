@@ -17,6 +17,8 @@ public class VideoToolControlPanel extends JPanel {
     private JComboBox<String> linkList;
     private VideoToolVideoPanel videoToolVideoPanel;
     private HyperlinkPanel hyperlinkPanel;
+    private HyperlinkVideoPanel hyperlinkVideoPanel;
+    private String currentHyperlinkPath;
     private boolean triggerListListener;
 
 
@@ -95,6 +97,12 @@ public class VideoToolControlPanel extends JPanel {
         public void actionPerformed(ActionEvent e) {
             JComboBox box = (JComboBox) e.getSource();
 
+            // No need to open video if all we want is a hyperlink connection
+            if (box.getSelectedItem() == "Create new hyperlink") {
+                createHyperlink();
+                return;
+            }
+
             // set current directory to user's system's directory
             JFileChooser chooser = new JFileChooser();
             String startingDir = System.getProperty("user.dir");
@@ -115,8 +123,6 @@ public class VideoToolControlPanel extends JPanel {
                 vepA.loadVideo(filepath);
             } else if (box.getSelectedItem() == "Import Secondary Video") {
                 vepB.loadVideo(filepath);
-            } else if (box.getSelectedItem() == "Create new hyperlink") {
-                createHyperlink();
             }
         }
     }
@@ -124,7 +130,20 @@ public class VideoToolControlPanel extends JPanel {
     private class SaveButtonListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
-            hyperlinkPanel.saveHyperlinks(videoToolVideoPanel.getVideoSubPanel('A').getVideoPath());
+            currentHyperlinkPath = hyperlinkPanel.saveHyperlinks(videoToolVideoPanel.getVideoSubPanel('A').getVideoPath());
+        }
+    }
+
+    private class PlayListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            if (currentHyperlinkPath == null || currentHyperlinkPath.equals("")) {
+                return;
+            }
+
+            VideoEditPanel vepA = VideoToolControlPanel.this.videoToolVideoPanel.getVideoSubPanel('A');
+            String videoToPlayPath = vepA.getVideoPath();
+            (new VideoPlaybackTool(videoToPlayPath, currentHyperlinkPath)).displayGUI();
         }
     }
 
@@ -201,11 +220,14 @@ public class VideoToolControlPanel extends JPanel {
         // control C
         JButton connectButton = new JButton("Connect Video");
         JButton saveButton = new JButton("Save File");
+        JButton playButton = new JButton("Play!");
         connectButton.addActionListener(new ConnectHyperlinkListener());
         saveButton.addActionListener(new SaveButtonListener());
+        playButton.addActionListener(new PlayListener());
 
         buttonSubPanel.add(connectButton);
         buttonSubPanel.add(saveButton);
+        buttonSubPanel.add(playButton);
 
         //inner layout
         this.add(buttonSubPanel);
