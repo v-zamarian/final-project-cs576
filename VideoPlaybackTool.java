@@ -1,8 +1,11 @@
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -13,8 +16,9 @@ public class VideoPlaybackTool extends JFrame {
     private Video video;
     private AudioWrapper audio;
     private VideoPlaybackControlPanel controlPanel;
-    private JLabel videoPanel;
+    private JLabel videoImageLabel;
     private JPanel infoPanel;
+    private GridBagConstraints c;
     private Thread playbackThread;
     private int currentFrameNumber;
     private String hyperlinkPath;
@@ -41,9 +45,18 @@ public class VideoPlaybackTool extends JFrame {
         }
     }
 
+    private class WindowCloseListener extends WindowAdapter {
+        @Override
+        public void windowClosing(WindowEvent e) {
+            audio.stop();
+            e.getWindow().dispose();
+        }
+    }
+
     public VideoPlaybackTool(String filepath) {
         this.setTitle("Hyperlinked Video Player");
         this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        this.addWindowListener(new WindowCloseListener());
         this.video = new Video(filepath);
 
         // init AudioWrapper object
@@ -51,8 +64,10 @@ public class VideoPlaybackTool extends JFrame {
         String basePathName = filepath.substring(0, p);
         this.audio = new AudioWrapper(basePathName);
 
+        this.c = new GridBagConstraints();
+
         this.controlPanel = new VideoPlaybackControlPanel();
-        this.videoPanel = new JLabel(new ImageIcon(this.video.getFrame(1)));
+        this.videoImageLabel = new JLabel(new ImageIcon(this.video.getFrame(1)));
         this.infoPanel = new JPanel();
         this.hyperlinkVideoPanel = new HyperlinkVideoPanel();
 
@@ -66,25 +81,11 @@ public class VideoPlaybackTool extends JFrame {
         // JFrame initialization
         Container contentPane = this.getContentPane();
         GridBagLayout gridbag = new GridBagLayout();
-        GridBagConstraints c = new GridBagConstraints();
         contentPane.setLayout(gridbag);
         c.fill = GridBagConstraints.BOTH;
 
-        // TODO: Video Playback panel
-        c.gridx = 0;
-        c.gridy = 0;
-        gridbag.setConstraints(videoPanel, c);
-        contentPane.add(videoPanel);
-
-        // Hyperlink Video Panel
-        //hyperlinkVideoPanel.setOpaque(false);
-        hyperlinkVideoPanel.setBackground(Color.BLUE);
-        gridbag.setConstraints(hyperlinkVideoPanel, c);
-        contentPane.add(hyperlinkVideoPanel);
-        if (!hyperlinkVideoPanel.loadLinks()) {
-            throw new Exception("User cancelled operation");
-        }
-
+        // Video Playback Panel with hyperlinkVideoPanel and videoImageLabel
+        initVideoPanel(0, 0);
 
         // control sub-panel
         controlPanel.initSubPanel(new PlaybackListener());
@@ -169,11 +170,10 @@ public class VideoPlaybackTool extends JFrame {
                             break;
                         }
 
-                        videoPanel.setIcon(new ImageIcon(video.getFrame(currentFrameNumber)));
+                        videoImageLabel.setIcon(new ImageIcon(video.getFrame(currentFrameNumber)));
                         ((JLabel) infoPanel.getComponent(0)).setText("Playing frame " + currentFrameNumber);
 
                         hyperlinkVideoPanel.setCurrentFrame(currentFrameNumber);
-                        hyperlinkVideoPanel.updateHyperlinks();
                         getContentPane().revalidate();
                         getContentPane().repaint();
 
@@ -219,9 +219,27 @@ public class VideoPlaybackTool extends JFrame {
         stopRequested = false;
 
         currentFrameNumber = 1;
-        videoPanel.setIcon(new ImageIcon(video.getFrame(currentFrameNumber)));
+        videoImageLabel.setIcon(new ImageIcon(video.getFrame(currentFrameNumber)));
         ((JLabel) infoPanel.getComponent(0)).setText("Video not started");
         revalidate();
         repaint();
+    }
+
+    private void initVideoPanel(int x, int y) throws Exception {
+        JPanel videoPlaybackPanel = new JPanel();
+        videoPlaybackPanel.setBorder(new EmptyBorder(-5, -5, -5, -5));
+        c.gridx = x;
+        c.gridy = y;
+
+        hyperlinkVideoPanel.setOpaque(false);
+        hyperlinkVideoPanel.setPreferredSize(new Dimension(352, 288));
+        if (!hyperlinkVideoPanel.loadLinks()) {
+            throw new Exception("User cancelled operation");
+        }
+
+        videoPlaybackPanel.add(videoImageLabel);
+
+        this.getContentPane().add(hyperlinkVideoPanel, c);
+        this.getContentPane().add(videoPlaybackPanel, c);
     }
 }
