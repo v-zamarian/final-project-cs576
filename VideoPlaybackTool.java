@@ -62,7 +62,7 @@ public class VideoPlaybackTool extends JFrame {
         this.isPlaying = false;
     }
 
-    public void displayGUI() {
+    public void displayGUI() throws Exception {
         // JFrame initialization
         Container contentPane = this.getContentPane();
         GridBagLayout gridbag = new GridBagLayout();
@@ -81,7 +81,10 @@ public class VideoPlaybackTool extends JFrame {
         hyperlinkVideoPanel.setBackground(Color.BLUE);
         gridbag.setConstraints(hyperlinkVideoPanel, c);
         contentPane.add(hyperlinkVideoPanel);
-        hyperlinkVideoPanel.loadLinks();
+        if (!hyperlinkVideoPanel.loadLinks()) {
+            throw new Exception("User cancelled operation");
+        }
+
 
         // control sub-panel
         controlPanel.initSubPanel(new PlaybackListener());
@@ -91,7 +94,7 @@ public class VideoPlaybackTool extends JFrame {
         contentPane.add(controlPanel);
 
         // info sub-panel
-        JLabel infoText = new JLabel("Blah");
+        JLabel infoText = new JLabel("Video not started");
         infoText.setForeground(Color.WHITE);
         infoPanel.add(infoText);
         infoPanel.setBackground(Color.BLACK);

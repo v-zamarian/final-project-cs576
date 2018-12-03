@@ -139,7 +139,12 @@ public class VideoToolControlPanel extends JPanel {
         public void actionPerformed(ActionEvent e) {
             VideoEditPanel vepA = VideoToolControlPanel.this.videoToolVideoPanel.getVideoSubPanel('A');
             String videoToPlayPath = vepA.getVideoPath();
-            (new VideoPlaybackTool(videoToPlayPath)).displayGUI();
+
+            try {
+                (new VideoPlaybackTool(videoToPlayPath)).displayGUI();
+            } catch (Exception ex) {
+                System.out.println("DEBUG: User cancelled operation");
+            }
         }
     }
 

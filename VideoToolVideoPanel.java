@@ -1,4 +1,5 @@
 import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import java.awt.*;
@@ -53,7 +54,6 @@ public class VideoToolVideoPanel extends JPanel {
 
     // Slider Listener
     private class SliderListener implements ChangeListener {
-        // TODO: Remove async ops if deemed unnecessary. Rasterizer renders this obsolete for now
         @Override
         public void stateChanged(ChangeEvent e) {
             if (textFieldChanged) {
@@ -186,13 +186,15 @@ public class VideoToolVideoPanel extends JPanel {
 
             JLabel img = new JLabel(new ImageIcon(videoASubPanel.getFrame()));
             videoASubPanel.add(img);
-            videoASubPanel.setPreferredSize(new Dimension(352, 288));
+            videoASubPanel.setBorder(new EmptyBorder(-5, -5, -5,-5));
+            //videoASubPanel.setPreferredSize(new Dimension(352, 288));
             this.add(videoASubPanel.getHyperlinkPanel(), c);
             this.add(videoASubPanel, c);
         } else {
             JLabel img = new JLabel(new ImageIcon(videoBSubPanel.getFrame()));
             videoBSubPanel.add(img);
-            videoBSubPanel.setPreferredSize(new Dimension(352, 288));
+            videoBSubPanel.setBorder(new EmptyBorder(-5, -5, -5,-5));
+            //videoBSubPanel.setPreferredSize(new Dimension(352, 288));
             this.add(videoBSubPanel, c);
         }
     }

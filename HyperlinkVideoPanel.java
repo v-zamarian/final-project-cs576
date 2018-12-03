@@ -50,7 +50,7 @@ public class HyperlinkVideoPanel extends JPanel {
         addMouseMotionListener(mAdapter);
     }
 
-    public void loadLinks(){
+    public boolean loadLinks(){
         JFileChooser chooser = new JFileChooser(System.getProperty("user.dir"));
         chooser.setFileFilter(new FileNameExtensionFilter("*.hyp", "hyp"));
 
@@ -61,7 +61,7 @@ public class HyperlinkVideoPanel extends JPanel {
 
             System.out.println("Loading hyperlinks file: " + inputFile); //temp
         }else{
-            return;
+            return false;
         }
 
         try {
@@ -80,9 +80,12 @@ public class HyperlinkVideoPanel extends JPanel {
         } catch (IOException io) {
             io.printStackTrace();
             System.out.println("ERROR: " + io.getMessage());
+            return false;
         }
 
         linksLoaded = true;
+
+        return true;
     }
 
     void playVideo(){ //quick testing code
@@ -123,17 +126,18 @@ public class HyperlinkVideoPanel extends JPanel {
         if (!linksLoaded) {
             return;
         }
-        for (Map.Entry<String, Hyperlink> entry : hyperlinks.entrySet()){
+
+        for (Map.Entry<String, Hyperlink> entry : hyperlinks.entrySet()) {
             String key = entry.getKey();
             Hyperlink currLink = entry.getValue();
 
             //only draw box in frames it was defined for
             if (currLink.endFrame != -1) {
-                if (currentFrame < currLink.startFrame){
+                if (currentFrame < currLink.startFrame) {
                     continue;
                 }
 
-                if (currentFrame > currLink.endFrame){ //hyperlink box is no longer needed
+                if (currentFrame > currLink.endFrame) { //hyperlink box is no longer needed
                     currentBoxes.remove(key);
                     continue;
                 }
@@ -195,7 +199,7 @@ public class HyperlinkVideoPanel extends JPanel {
 //
 //            g2.fill(s);
 //        }
-    }
+//    }
 
     class BoxVideoMouseAdapter extends MouseAdapter {
         String getLinkAtLocation(Point p){
