@@ -27,6 +27,8 @@ public class VideoPlaybackTool extends JFrame {
     private boolean stopRequested;
     private boolean isPlaying;
 
+    private boolean fromLink;
+
     final private int FRAMES_PER_SECOND = 30;
     final private int TOTAL_FRAMES = 9000;
     final private int DELAY_THRESHOLD = 5;
@@ -53,7 +55,7 @@ public class VideoPlaybackTool extends JFrame {
         }
     }
 
-    public VideoPlaybackTool(String filepath) {
+    public VideoPlaybackTool(String filepath, int frameNumber, boolean fromLink) {
         this.setTitle("Hyperlinked Video Player");
         this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         this.addWindowListener(new WindowCloseListener());
@@ -65,16 +67,16 @@ public class VideoPlaybackTool extends JFrame {
         this.audio = new AudioWrapper(basePathName);
 
         this.c = new GridBagConstraints();
-
         this.controlPanel = new VideoPlaybackControlPanel();
-        this.videoImageLabel = new JLabel(new ImageIcon(this.video.getFrame(1)));
+        this.videoImageLabel = new JLabel(new ImageIcon(this.video.getFrame(frameNumber)));
         this.infoPanel = new JPanel();
         this.hyperlinkVideoPanel = new HyperlinkVideoPanel();
 
-        this.currentFrameNumber = 1;
-        this.hyperlinkPath = hyperlinkPath;
+        this.currentFrameNumber = frameNumber;
 
         this.isPlaying = false;
+
+        this.fromLink = fromLink;
     }
 
     public void displayGUI() throws Exception {
@@ -233,7 +235,9 @@ public class VideoPlaybackTool extends JFrame {
 
         hyperlinkVideoPanel.setOpaque(false);
         hyperlinkVideoPanel.setPreferredSize(new Dimension(352, 288));
-        if (!hyperlinkVideoPanel.loadLinks()) {
+
+        boolean linksLoaded = (fromLink) ? hyperlinkVideoPanel.loadLinks(video.getFilepath()) : hyperlinkVideoPanel.loadLinks(null);
+        if (!fromLink && !linksLoaded) {
             throw new Exception("User cancelled operation");
         }
 
@@ -241,5 +245,16 @@ public class VideoPlaybackTool extends JFrame {
 
         this.getContentPane().add(hyperlinkVideoPanel, c);
         this.getContentPane().add(videoPlaybackPanel, c);
+    }
+
+    public void triggerLinkAction(Hyperlink link) {
+        pause();
+
+        try {
+            System.out.println("VIDEO TO PLAY: " + link.getSecondaryName());
+            (new VideoPlaybackTool(link.getSecondaryName(), link.getSecondaryStartFrame(), true)).displayGUI();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

@@ -141,7 +141,9 @@ public class VideoToolControlPanel extends JPanel {
             String videoToPlayPath = vepA.getVideoPath();
 
             try {
-                (new VideoPlaybackTool(videoToPlayPath)).displayGUI();
+                final int START_FRAME = 1;
+                System.out.println("VIDEO TO PLAY: " + videoToPlayPath);
+                (new VideoPlaybackTool(videoToPlayPath, START_FRAME, false)).displayGUI();
             } catch (Exception ex) {
                 System.out.println("DEBUG: User cancelled operation");
             }
@@ -162,7 +164,7 @@ public class VideoToolControlPanel extends JPanel {
             // connect hyperlink to secondary video
             if (!hyperlinkPanel.isConnected(videoToolVideoPanel.getCurrentLink())) {
                 int primaryStartFrame = hyperlinkPanel.getHyperlink(videoToolVideoPanel.getCurrentLink()).getPrimaryStartFrame();
-                int secondaryStartFrame = hyperlinkPanel.getHyperlink(videoToolVideoPanel.getCurrentLink()).getPrimaryStartFrame();
+                int secondaryStartFrame = videoToolVideoPanel.getVideoSubPanel('B').getCurrentFrameNumber();
                 JFrame window = (JFrame) SwingUtilities.getRoot(VideoToolControlPanel.this);
                 if (hyperlinkPanel.setFrames(currentLink, primaryStartFrame , secondaryStartFrame) == 0) {
                     JOptionPane.showMessageDialog(window, "Hyperlink start frame cannot be less than the end frame!",

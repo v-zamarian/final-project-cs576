@@ -143,6 +143,10 @@ public class Hyperlink {
         return this.secondFrame;
     }
 
+    public String getSecondaryName() {
+        return this.secondaryName;
+    }
+
     @Override
     public String toString(){ //this string is written to the metadata file
         return String.format("%s, %s, %d, %d, %s, %d, %d, %d, %d, %d, %.3f, %.3f, %.3f, %.3f, %d, %d, %d",

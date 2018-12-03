@@ -10,7 +10,6 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.geom.Rectangle2D;
 import java.io.File;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -31,19 +30,21 @@ public class HyperlinkVideoPanel extends JPanel {
         addMouseMotionListener(mAdapter);
     }
 
-    public boolean loadLinks(){
-        JFileChooser chooser = new JFileChooser(System.getProperty("user.dir"));
-        chooser.setFileFilter(new FileNameExtensionFilter("*.hyp", "hyp"));
-
+    public boolean loadLinks(String linkPath){
         String inputFile;
-
-        if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION){
-            inputFile = chooser.getSelectedFile().getAbsolutePath();
-
-            System.out.println("Loading hyperlinks file: " + inputFile); //temp
-        }else{
-            return false;
+        if (linkPath != null) {
+            inputFile = linkPath;
+        } else {
+            JFileChooser chooser = new JFileChooser(System.getProperty("user.dir"));
+            chooser.setFileFilter(new FileNameExtensionFilter("*.hyp", "hyp"));
+            if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
+                inputFile = chooser.getSelectedFile().getAbsolutePath();
+            } else {
+                return false;
+            }
         }
+
+        System.out.println("Loading hyperlinks file: " + inputFile); //temp
 
         try {
             Scanner in = new Scanner(new File(inputFile));
@@ -72,6 +73,7 @@ public class HyperlinkVideoPanel extends JPanel {
     public void setCurrentFrame(int currentFrame) {
         this.currentFrame = currentFrame;
     }
+
 
     @Override
     protected void paintComponent(Graphics g){
@@ -153,6 +155,10 @@ public class HyperlinkVideoPanel extends JPanel {
                 System.out.println("Clicked hyperlink: " + linkName);
                 System.out.println("It links to: " + hyperlinks.get(linkName).secondaryName +
                         " at frame: " + hyperlinks.get(linkName).secondFrame);
+
+                VideoPlaybackTool player = (VideoPlaybackTool) SwingUtilities.getAncestorOfClass(VideoPlaybackTool.class, HyperlinkVideoPanel.this);
+                player.triggerLinkAction(hyperlinks.get(linkName));
+
             }
         }
     }
