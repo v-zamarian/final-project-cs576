@@ -137,13 +137,9 @@ public class VideoToolControlPanel extends JPanel {
     private class PlayListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
-            if (currentHyperlinkPath == null || currentHyperlinkPath.equals("")) {
-                return;
-            }
-
             VideoEditPanel vepA = VideoToolControlPanel.this.videoToolVideoPanel.getVideoSubPanel('A');
             String videoToPlayPath = vepA.getVideoPath();
-            (new VideoPlaybackTool(videoToPlayPath, currentHyperlinkPath)).displayGUI();
+            (new VideoPlaybackTool(videoToPlayPath)).displayGUI();
         }
     }
 

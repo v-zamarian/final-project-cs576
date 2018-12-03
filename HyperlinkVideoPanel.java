@@ -64,18 +64,23 @@ public class HyperlinkVideoPanel extends JPanel {
             return;
         }
 
-        Scanner in = new Scanner(inputFile);
+        try {
+            Scanner in = new Scanner(new File(inputFile));
 
-        while (in.hasNext()) {
-            String lineString = in.nextLine();
+            while (in.hasNext()) {
+                String lineString = in.nextLine();
 
-            Hyperlink inLink = new Hyperlink(lineString);
-            Hyperlink inLinkBoxes = new Hyperlink(lineString);
-            hyperlinks.put(inLink.linkName, inLink);
-            currentBoxes.put(inLinkBoxes.linkName, inLinkBoxes);
+                Hyperlink inLink = new Hyperlink(lineString);
+                Hyperlink inLinkBoxes = new Hyperlink(lineString);
+                hyperlinks.put(inLink.linkName, inLink);
+                currentBoxes.put(inLinkBoxes.linkName, inLinkBoxes);
+            }
+
+            in.close();
+        } catch (IOException io) {
+            io.printStackTrace();
+            System.out.println("ERROR: " + io.getMessage());
         }
-
-        in.close();
 
         linksLoaded = true;
     }

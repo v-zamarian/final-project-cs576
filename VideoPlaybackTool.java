@@ -41,7 +41,7 @@ public class VideoPlaybackTool extends JFrame {
         }
     }
 
-    public VideoPlaybackTool(String filepath, String hyperlinkPath) {
+    public VideoPlaybackTool(String filepath) {
         this.setTitle("Hyperlinked Video Player");
         this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         this.video = new Video(filepath);
@@ -81,7 +81,7 @@ public class VideoPlaybackTool extends JFrame {
         hyperlinkVideoPanel.setBackground(Color.BLUE);
         gridbag.setConstraints(hyperlinkVideoPanel, c);
         contentPane.add(hyperlinkVideoPanel);
-        hyperlinkVideoPanel.loadLinks(hyperlinkPath);
+        hyperlinkVideoPanel.loadLinks();
 
         // control sub-panel
         controlPanel.initSubPanel(new PlaybackListener());
