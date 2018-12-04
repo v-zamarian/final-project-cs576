@@ -1,5 +1,6 @@
 import javax.swing.*;
 import javax.swing.colorchooser.AbstractColorChooserPanel;
+import javax.swing.plaf.FontUIResource;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -12,11 +13,13 @@ public class VideoToolControlPanel extends JPanel {
     private JPanel buttonSubPanel;
     private JPanel linkSubPanel;
     private JComboBox<String> linkList;
+    private JComboBox<String> linkModList;
     private VideoToolVideoPanel videoToolVideoPanel;
     private HyperlinkPanel hyperlinkPanel;
     private HyperlinkVideoPanel hyperlinkVideoPanel;
     private String currentHyperlinkPath;
     private boolean triggerListListener;
+    private Font controlsFont = new Font("", Font.PLAIN, 16);
 
 
     private class LinkListListener implements ItemListener {
@@ -32,9 +35,9 @@ public class VideoToolControlPanel extends JPanel {
             if (e.getItem().equals("-")) {
 
                 // switching from connected link
-                if (hyperlinkPanel.isConnected(vtvp.getName())) {
+                if (hyperlinkPanel.isConnected(vtvp.getCurrentLink())) {
                     vtvp.setCurrentLink("");
-                    VideoToolControlPanel.this.enableHyperlinkButtons(false);
+                    enableModifyHyperlink(false);
 
                     hyperlinkPanel.revalidate();
                     hyperlinkPanel.repaint();
@@ -43,14 +46,16 @@ public class VideoToolControlPanel extends JPanel {
 
                 // switching from unconnected link
                 triggerListListener = false;
-                if (VideoToolControlPanel.this.cancelHyperlinkEdit()) {
+
+                if (cancelHyperlinkEdit()) {
                     hyperlinkPanel.removeLink(vtvp.getCurrentLink());
                     linkList.removeItem(vtvp.getCurrentLink());
                     vtvp.setCurrentLink("");
-                    enableHyperlinkButtons(false);
+                    enableModifyHyperlink(false);
                 } else {
                     linkList.setSelectedItem(vtvp.getCurrentLink());
                 }
+
                 triggerListListener = true;
 
                 hyperlinkPanel.revalidate();
@@ -61,11 +66,12 @@ public class VideoToolControlPanel extends JPanel {
             // if selected link is not the current link, change it to be the current link
             if (vtvp.getCurrentLink().equals("") || hyperlinkPanel.isConnected(vtvp.getCurrentLink())) {
                 vtvp.setCurrentLink((String) e.getItem());
-                enableHyperlinkButtons(true);
+                enableModifyHyperlink(true);
                 int primaryStartFrame = hyperlinkPanel.getHyperlink(vtvp.getCurrentLink()).getPrimaryStartFrame();
-                vtvp.getSliderSubPanel('A')
-                        .getSliderFrameField()
-                        .setText(Integer.toString(primaryStartFrame));
+                VideoToolSliderPanel sliderA = vtvp.getSliderSubPanel('A');
+
+                sliderA.getSliderFrameField().setText(String.format("%04d", primaryStartFrame));
+                sliderA.getSlider().setValue(primaryStartFrame);
 
                 hyperlinkPanel.revalidate();
                 hyperlinkPanel.repaint();
@@ -79,13 +85,61 @@ public class VideoToolControlPanel extends JPanel {
                 linkList.removeItem(vtvp.getCurrentLink());
 
                 vtvp.setCurrentLink((String) e.getItem());
-                enableHyperlinkButtons(true);
+                enableModifyHyperlink(true);
                 int primaryStartFrame = hyperlinkPanel.getHyperlink(vtvp.getCurrentLink()).getPrimaryStartFrame();
-                vtvp.getSliderSubPanel('A')
-                        .getSliderFrameField()
-                        .setText(Integer.toString(primaryStartFrame));
+                VideoToolSliderPanel sliderA = vtvp.getSliderSubPanel('A');
+
+                sliderA.getSliderFrameField().setText(String.format("%04d", primaryStartFrame));
+                sliderA.getSlider().setValue(primaryStartFrame);
+            }else{
+                linkList.setSelectedItem(vtvp.getCurrentLink());
             }
 
+            triggerListListener = true;
+        }
+    }
+
+    private class LinkModListListener implements ActionListener {
+        @Override
+        public void actionPerformed(ActionEvent e) {
+            VideoToolVideoPanel vtvp = VideoToolControlPanel.this.videoToolVideoPanel;
+            JComboBox box = (JComboBox) e.getSource();
+
+            if (box.getSelectedItem() == "Change Name"){
+                String name = chooseLinkName();
+
+                if (name == null){
+                    return;
+                }
+
+                //a hyperlink must be active for the option to even be used
+                triggerListListener = false;
+                linkList.removeItem(vtvp.getCurrentLink());
+                linkList.addItem(name);
+                linkList.setSelectedItem(name);
+
+                hyperlinkPanel.renameHyperlink(vtvp.getCurrentLink(), name);
+                vtvp.setCurrentLink(name);
+                triggerListListener = true;
+            } else if (box.getSelectedItem() == "Change Color"){
+                Color c = chooseLinkColor();
+
+                if (c == null){
+                    return;
+                }
+
+                hyperlinkPanel.changeLinkColor(vtvp.getCurrentLink(), c);
+            } else if (box.getSelectedItem() == "Delete Link"){
+                triggerListListener = false;
+
+                hyperlinkPanel.removeLink(vtvp.getCurrentLink());
+                linkList.removeItem(vtvp.getCurrentLink());
+                linkList.setSelectedItem("-");
+                vtvp.setCurrentLink("");
+                enableModifyHyperlink(false);
+
+                triggerListListener = true;
+            }
         }
     }
 
@@ -130,7 +184,11 @@ public class VideoToolControlPanel extends JPanel {
     private class SaveButtonListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
-            currentHyperlinkPath = hyperlinkPanel.saveHyperlinks(videoToolVideoPanel.getVideoSubPanel('A').getVideoName());
+            VideoEditPanel vep = videoToolVideoPanel.getVideoSubPanel('A');
+
+            if (vep.isVideoSet()) { //at least the primary video needs to be loaded first
+                currentHyperlinkPath = hyperlinkPanel.saveHyperlinks(vep.getVideoName());
+            }
         }
     }
 
@@ -159,20 +217,21 @@ public class VideoToolControlPanel extends JPanel {
                 return;
             }
 
-            triggerListListener = true;
+            triggerListListener = false;
 
             // connect hyperlink to secondary video
-            if (!hyperlinkPanel.isConnected(videoToolVideoPanel.getCurrentLink())) {
+            if (!hyperlinkPanel.isConnected(currentLink)) {
                 //int primaryStartFrame = hyperlinkPanel.getHyperlink(videoToolVideoPanel.getCurrentLink()).getPrimaryStartFrame();
                 //int secondaryStartFrame = hyperlinkPanel.getHyperlink(videoToolVideoPanel.getCurrentLink()).getSecondaryStartFrame();
                 int primaryEndFrame = videoToolVideoPanel.getVideoSubPanel('A').getCurrentFrameNumber();
                 int secondaryStartFrame = videoToolVideoPanel.getVideoSubPanel('B').getCurrentFrameNumber();
 
                 JFrame window = (JFrame) SwingUtilities.getRoot(VideoToolControlPanel.this);
+                JLabel message = new JLabel("Hyperlink start frame cannot be less than the end frame!");
+                message.setFont(controlsFont);
 
                 if (hyperlinkPanel.setFrames(currentLink, primaryEndFrame, secondaryStartFrame) == 0) {
-                    JOptionPane.showMessageDialog(window, "Hyperlink start frame cannot be less than the end frame!",
-                            "Error", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(window, message, "Error", JOptionPane.ERROR_MESSAGE);
                     triggerListListener = true;
                     return;
                 }
@@ -180,14 +239,13 @@ public class VideoToolControlPanel extends JPanel {
 
             // clear links
             videoToolVideoPanel.setCurrentLink("");
-            enableHyperlinkButtons(false);
+            enableModifyHyperlink(false);
             linkList.setSelectedItem("-");
 
             hyperlinkPanel.revalidate();
             hyperlinkPanel.repaint();
 
             triggerListListener = true;
-
         }
     }
 
@@ -195,10 +253,14 @@ public class VideoToolControlPanel extends JPanel {
         this.actionSubPanel = new JPanel();
         this.buttonSubPanel = new JPanel();
         this.linkSubPanel = new JPanel();
-        this.linkList = new JComboBox<>();
+        this.linkList = new JComboBox<>(new String[]{"-"});
+        this.linkModList = new JComboBox<>(new String[]{"Change Name", "Change Color", "Delete Link"});
         this.videoToolVideoPanel = vtvp;
-        this.triggerListListener = false;
+        this.triggerListListener = true;
         this.hyperlinkPanel = vtvp.getVideoSubPanel('A').getHyperlinkPanel();
+
+        //all dialog buttons are larger
+        UIManager.put("OptionPane.buttonFont", new FontUIResource(controlsFont));
     }
 
     public void initControlPanel() {
@@ -211,11 +273,13 @@ public class VideoToolControlPanel extends JPanel {
         // control A
         // label
         JLabel aspLabel = new JLabel("Action: ");
+        aspLabel.setFont(controlsFont);
 
         // fill actionList
         String[] actions = {"Import Primary Video", "Import Secondary Video", "Create new hyperlink"};
         JComboBox<String> actionList = new JComboBox<>(actions);
         actionList.addActionListener(new ActionButtonListener());
+        actionList.setFont(controlsFont);
 
         actionSubPanel.add(aspLabel);
         actionSubPanel.add(actionList);
@@ -232,9 +296,33 @@ public class VideoToolControlPanel extends JPanel {
         saveButton.addActionListener(new SaveButtonListener());
         playButton.addActionListener(new PlayListener());
 
-        buttonSubPanel.add(connectButton);
-        buttonSubPanel.add(saveButton);
-        buttonSubPanel.add(playButton);
+        connectButton.setFont(controlsFont);
+        saveButton.setFont(controlsFont);
+        playButton.setFont(controlsFont);
+
+        GridBagConstraints c = new GridBagConstraints();
+        c.fill = GridBagConstraints.HORIZONTAL;
+        buttonSubPanel.setLayout(new GridBagLayout());
+
+        c.gridx = 0;
+        c.gridy = 0;
+        buttonSubPanel.add(connectButton, c);
+
+        c.gridx = 1;
+        c.gridy = 0;
+        buttonSubPanel.add(Box.createHorizontalStrut(10), c);
+
+        c.gridx = 2;
+        c.gridy = 0;
+        buttonSubPanel.add(playButton, c);
+
+        c.gridx = 0;
+        c.gridy = 1;
+        buttonSubPanel.add(Box.createVerticalStrut(10), c);
+
+        c.gridx = 0;
+        c.gridy = 2;
+        buttonSubPanel.add(saveButton, c);
 
         //inner layout
         this.add(buttonSubPanel);
@@ -243,11 +331,50 @@ public class VideoToolControlPanel extends JPanel {
     private void initLinkSubPanel() {
         // control B
         JLabel aspLabel = new JLabel("Link: ");
+        aspLabel.setFont(controlsFont);
 
         linkList.addItemListener(new LinkListListener());
+        linkList.setFont(controlsFont);
+        linkList.setPreferredSize(new Dimension(120, 30));
 
-        linkSubPanel.add(aspLabel);
-        linkSubPanel.add(linkList);
+        JLabel modLabel = new JLabel("Modify Link:");
+        modLabel.setFont(controlsFont);
+
+        linkModList.addActionListener(new LinkModListListener());
+        linkModList.setFont(controlsFont);
+
+        //add components to linkSubPanel
+        GridBagConstraints c = new GridBagConstraints();
+        c.fill = GridBagConstraints.HORIZONTAL;
+        linkSubPanel.setLayout(new GridBagLayout());
+
+        c.gridx = 0;
+        c.gridy = 0;
+        linkSubPanel.add(aspLabel, c);
+
+        c.gridx = 1;
+        c.gridy = 0;
+        linkSubPanel.add(linkList, c);
+
+        c.gridx = 0;
+        c.gridy = 1;
+        linkSubPanel.add(Box.createVerticalStrut(10), c);
+
+        c.gridx = 0;
+        c.gridy = 2;
+        c.ipadx = 5;
+        linkSubPanel.add(modLabel, c);
+
+        c.gridx = 1;
+        c.gridy = 1;
+        c.ipadx = 0;
+        linkSubPanel.add(Box.createVerticalStrut(10), c);
+
+        c.gridx = 1;
+        c.gridy = 2;
+        linkSubPanel.add(linkModList, c);
+
+        enableModifyHyperlink(false);
 
         this.add(linkSubPanel);
     }
@@ -257,26 +384,36 @@ public class VideoToolControlPanel extends JPanel {
             return false;
         }
 
-        //error shows up saying cannot cast JPanel to JFrame
-        //JFrame window = (JFrame) VideoToolControlPanel.this.getParent();
-        return (JOptionPane.showConfirmDialog(VideoToolControlPanel.this.getParent(),
-                "Do you want to stop editing the current" +
-                " hyperlink: " + videoToolVideoPanel.getCurrentLink() + "?") == JOptionPane.OK_OPTION);
+        JFrame window = (JFrame) SwingUtilities.getRoot(VideoToolControlPanel.this);
+        JLabel message = new JLabel("Do you want to stop editing the current" +
+                " hyperlink: " + videoToolVideoPanel.getCurrentLink() + "?");
+        message.setFont(controlsFont);
+
+        return (JOptionPane.showConfirmDialog(window, message) == JOptionPane.OK_OPTION);
     }
 
     private String chooseLinkName() {
-        String linkName = JOptionPane.showInputDialog("Enter a name for the hyperlink: ");
+        JLabel message = new JLabel("Enter a name for the hyperlink: ");
+        message.setFont(controlsFont);
+
+        String linkName = JOptionPane.showInputDialog(message);
         if (linkName == null) {
-            return null;
-        } else if (linkName.equals("")) {
-            //JFrame window = (JFrame) VideoToolControlPanel.this.getParent();
-            JOptionPane.showMessageDialog(VideoToolControlPanel.this.getParent(),
-                    "Invalid link name.", "Error", JOptionPane.ERROR_MESSAGE);
             return null;
         }
 
-        // sanitize link name and return
-        return linkName.replaceAll("[^A-Za-z0-9 ]", "");
+        //sanitize link name, moved from return statement because "" can be returned
+        linkName = linkName.replaceAll("[^A-Za-z0-9 ]", "");
+
+        if (linkName.equals("")) {
+            JFrame window = (JFrame) SwingUtilities.getRoot(VideoToolControlPanel.this);
+            message.setText("Invalid link name.");
+            message.setFont(controlsFont);
+
+            JOptionPane.showMessageDialog(window, message, "Error", JOptionPane.ERROR_MESSAGE);
+            return null;
+        }
+
+        return linkName;
     }
 
     private Color chooseLinkColor() {
@@ -294,54 +431,64 @@ public class VideoToolControlPanel extends JPanel {
         return null;
     }
 
-    private void enableHyperlinkButtons(boolean enable) {
-        for (Component linkSubPanelItem : linkSubPanel.getComponents()) {
-            linkSubPanelItem.setEnabled(enable);
-        }
+    private void enableModifyHyperlink(boolean enable) {
+        linkModList.setEnabled(enable);
     }
 
     private void createHyperlink() {
         // error out if not all videos loaded
         VideoEditPanel vepA = videoToolVideoPanel.getVideoSubPanel('A');
         VideoEditPanel vepB = videoToolVideoPanel.getVideoSubPanel('B');
+
         if (!vepA.isVideoSet() || !vepB.isVideoSet()) {
-            //JFrame window = (JFrame) VideoToolControlPanel.this.getParent();
-            JOptionPane.showMessageDialog(VideoToolControlPanel.this.getParent(),
-                    "Need to load videos first.",
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE);
+            JFrame window = (JFrame) SwingUtilities.getRoot(VideoToolControlPanel.this);
+            JLabel message = new JLabel("Need to load videos first.");
+            message.setFont(controlsFont);
+
+            JOptionPane.showMessageDialog(window, message, "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
         // Continue hyperlink creation or cancel if link is not in new state
+        triggerListListener = false;
         String currentLink = videoToolVideoPanel.getCurrentLink();
         boolean currentLinkExists = !currentLink.equals("");
         boolean currentLinkConnected = hyperlinkPanel.isConnected(currentLink);
-        if (currentLinkExists && !currentLinkConnected && !cancelHyperlinkEdit()) {
-            triggerListListener = true;
-            return;
-        } else {
-            linkList.removeItem(currentLink);
-            hyperlinkPanel.removeLink(currentLink);
-            videoToolVideoPanel.setCurrentLink("");
-            enableHyperlinkButtons(false);
+
+        if (currentLinkExists){
+            if (!currentLinkConnected){
+                if (!cancelHyperlinkEdit()){
+                    triggerListListener = true;
+                    return;
+                }else{
+                    linkList.removeItem(currentLink);
+                    hyperlinkPanel.removeLink(currentLink);
+                    videoToolVideoPanel.setCurrentLink("");
+                    enableModifyHyperlink(false);
+                }
+            }
         }
 
         // Finalize link settings and add
         String linkName = chooseLinkName();
         if (linkName == null) {
+            triggerListListener = true;
             return;
         }
+
         Color linkColor = chooseLinkColor();
         if (linkColor == null) {
+            triggerListListener = true;
             return;
         }
-        int primaryStartFrame = videoToolVideoPanel.getVideoSubPanel('A').getCurrentFrameNumber();
+
+        int primaryStartFrame = vepA.getCurrentFrameNumber();
         hyperlinkPanel.addHyperlink(linkName, vepA.getVideoPath(), vepB.getVideoPath(),
                 primaryStartFrame, linkColor);
         linkList.addItem(linkName);
         linkList.setSelectedItem(linkName);
         videoToolVideoPanel.setCurrentLink(linkName);
-        enableHyperlinkButtons(true);
+        enableModifyHyperlink(true);
+        triggerListListener = true;
     }
 }

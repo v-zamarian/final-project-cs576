@@ -21,6 +21,10 @@ public class VideoTool extends JFrame {
     }
 
     public void displayGUI() {
+        ToolTipManager.sharedInstance().setEnabled(false);
+        //there is a really weired bug where when a tooltip is displayed, the window would
+        //repaint over itself whenever the mouse was moved over an interactive component
+
         Container contentPane = this.getContentPane();
         GridBagLayout gridbag = new GridBagLayout();
         GridBagConstraints c = new GridBagConstraints();
@@ -48,7 +52,7 @@ public class VideoTool extends JFrame {
         contentPane.add(controlPanel);
 
         // Last display steps
-        this.setSize(750, 500);
+        this.setSize(800, 550);
         this.setVisible(true);
     }
 

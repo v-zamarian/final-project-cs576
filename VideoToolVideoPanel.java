@@ -249,9 +249,11 @@ public class VideoToolVideoPanel extends JPanel {
 
     private void initSliderSubPanel(char id, int x, int y) {
         JSlider targetSlider = new JSlider(1, 9000, 1);
+        targetSlider.setPreferredSize(new Dimension(IMG_WIDTH-60, 30));
         targetSlider.addChangeListener(new SliderListener());
 
         JTextField targetField = new JTextField("0001");
+        targetField.setFont(new Font("", Font.PLAIN, 16));
         targetField.addActionListener(new TextFieldListener());
 
         c.gridx = x;
