@@ -25,6 +25,23 @@ public class VideoToolVideoPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent e) {
             JTextField currTextField = (JTextField) e.getSource();
+
+            //don't modify if video isn't loaded
+            if (!videoASubPanel.isVideoSet()) {
+                if (currTextField.getParent() == sliderASubPanel) {
+                    currTextField.setText("0001");
+                    return;
+                }
+            }
+
+            if (!videoBSubPanel.isVideoSet()){
+                if (currTextField.getParent() == sliderBSubPanel) {
+                    currTextField.setText("0001");
+                    return;
+                }
+            }
+
+
             int textFieldValue;
             try {
                 textFieldValue = Integer.parseInt(currTextField.getText());
@@ -32,6 +49,9 @@ public class VideoToolVideoPanel extends JPanel {
                 System.out.println("DEBUG: textFieldValue is not an integer");
                 return;
             }
+
+            //check for frame value out of bounds (between 1 and 9000)
+            textFieldValue = Math.min(9000, Math.max(1, textFieldValue));
 
             textFieldChanged = true;
             if (currTextField.getParent() == sliderASubPanel) {
@@ -61,6 +81,25 @@ public class VideoToolVideoPanel extends JPanel {
             }
 
             final JSlider currSlider = (JSlider) e.getSource();
+
+            //don't modify if video isn't loaded
+            if (!videoASubPanel.isVideoSet()){
+                if (currSlider.getParent() == sliderASubPanel){
+                    currSlider.setValue(1);
+                    sliderASubPanel.getSliderFrameField().setText("0001");
+                    return;
+                }
+            }
+
+            if (!videoBSubPanel.isVideoSet()){
+                if (currSlider.getParent() == sliderBSubPanel){
+                    currSlider.setValue(1);
+                    sliderBSubPanel.getSliderFrameField().setText("0001");
+                    return;
+                }
+            }
+
+
             if (currSlider.getParent() == sliderASubPanel) {
                 sliderASubPanel.getSliderFrameField().setText(String.format("%04d", currSlider.getValue()));
             } else {
@@ -83,6 +122,10 @@ public class VideoToolVideoPanel extends JPanel {
                 public void done() {
                     if (currSlider.getParent() == sliderASubPanel) {
                         ((JLabel) videoASubPanel.getComponent(0)).setIcon(new ImageIcon(videoASubPanel.getFrame()));
+
+                        //doing a repaint here because hyperlink box doesn't show up after dragging slider
+                        VideoToolVideoPanel.this.revalidate();
+                        VideoToolVideoPanel.this.repaint();
                     } else {
                         ((JLabel) videoBSubPanel.getComponent(0)).setIcon(new ImageIcon(videoBSubPanel.getFrame()));
                     }
@@ -96,8 +139,11 @@ public class VideoToolVideoPanel extends JPanel {
 
     public VideoToolVideoPanel() {
         // Init video panel
-        this.videoASubPanel = new VideoEditPanel('A', "London/LondonOne/LondonOne.avi");
-        this.videoBSubPanel = new VideoEditPanel('B', "London/LondonTwo/LondonTwo.avi");
+        //this.videoASubPanel = new VideoEditPanel('A', "London/LondonOne/LondonOne.avi");
+        //this.videoBSubPanel = new VideoEditPanel('B', "London/LondonTwo/LondonTwo.avi");
+
+        this.videoASubPanel = new VideoEditPanel('A');
+        this.videoBSubPanel = new VideoEditPanel('B');
 
         // Init slider panel
         this.sliderASubPanel = new VideoToolSliderPanel('A');
@@ -184,17 +230,19 @@ public class VideoToolVideoPanel extends JPanel {
             hyperlinkPanel.setOpaque(false);
             videoASubPanel.setHyperlinkPanel(hyperlinkPanel);
 
-            JLabel img = new JLabel(new ImageIcon(videoASubPanel.getFrame()));
+            //JLabel img = new JLabel(new ImageIcon(videoASubPanel.getFrame()));
+            JLabel img = new JLabel();
             videoASubPanel.add(img);
             videoASubPanel.setBorder(new EmptyBorder(-5, -5, -5,-5));
-            //videoASubPanel.setPreferredSize(new Dimension(352, 288));
+            videoASubPanel.setPreferredSize(new Dimension(352, 288));
             this.add(videoASubPanel.getHyperlinkPanel(), c);
             this.add(videoASubPanel, c);
         } else {
-            JLabel img = new JLabel(new ImageIcon(videoBSubPanel.getFrame()));
+            //JLabel img = new JLabel(new ImageIcon(videoBSubPanel.getFrame()));
+            JLabel img = new JLabel();
             videoBSubPanel.add(img);
             videoBSubPanel.setBorder(new EmptyBorder(-5, -5, -5,-5));
-            //videoBSubPanel.setPreferredSize(new Dimension(352, 288));
+            videoBSubPanel.setPreferredSize(new Dimension(352, 288));
             this.add(videoBSubPanel, c);
         }
     }

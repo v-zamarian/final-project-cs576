@@ -1,5 +1,3 @@
-import javafx.scene.control.Hyperlink;
-
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.*;
@@ -52,10 +50,21 @@ public class VideoEditPanel extends JPanel {
 
     public void loadVideo(String videoPath) {
         // flush cache and reload instance vars for new video
-        int p = videoPath.lastIndexOf(".");
-        String videoPathName = videoPath.substring(0, p);
+        //int p = videoPath.lastIndexOf(".");
+        //String videoPathName = videoPath.substring(0, p);
+
+        int p;
+
+        if (System.getProperty("os.name").startsWith("Windows")) {
+            p = videoPath.lastIndexOf("\\");
+        } else {
+            p = videoPath.lastIndexOf("/");
+        }
+
+        String videoPathName = videoPath + videoPath.substring(p);
+
         this.video = videoPathName;
-        this.videoPath = videoPath;
+        this.videoPath = videoPathName + ".avi";
         this.cache = new HashMap<>();
 
         // load first frame
@@ -64,8 +73,15 @@ public class VideoEditPanel extends JPanel {
             this.cache.put(id + video + "1", firstFrame);
             this.frame = firstFrame;
         } catch (IOException e) {
-            e.printStackTrace();
+            //e.printStackTrace();
+
+            JOptionPane.showMessageDialog(this.getParent(),
+                    "Invalid directory chosen.",
+                    "Error",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
         }
+
         this.currentFrameNumber = 1;
         ((JLabel) this.getComponent(0)).setIcon(new ImageIcon(this.getFrame()));
 
@@ -93,6 +109,10 @@ public class VideoEditPanel extends JPanel {
 
     public boolean isVideoSet() {
         return (this.frame != null);
+    }
+
+    public String getVideoName(){
+        return this.video;
     }
 
     public String getVideoPath() {

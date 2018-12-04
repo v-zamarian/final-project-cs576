@@ -1,8 +1,5 @@
-import com.sun.codemodel.internal.JOp;
-
 import javax.swing.*;
 import javax.swing.colorchooser.AbstractColorChooserPanel;
-import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -105,11 +102,13 @@ public class VideoToolControlPanel extends JPanel {
 
             // set current directory to user's system's directory
             JFileChooser chooser = new JFileChooser();
+            chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+
             String startingDir = System.getProperty("user.dir");
             chooser.setCurrentDirectory(new File(startingDir));
 
             // have user choose video of allowed type or cancel
-            chooser.setFileFilter(new FileNameExtensionFilter(".avi", "avi"));
+            //chooser.setFileFilter(new FileNameExtensionFilter(".avi", "avi"));
             int value = chooser.showOpenDialog(null);
             if (value != JFileChooser.APPROVE_OPTION) {
                 return;
@@ -119,6 +118,7 @@ public class VideoToolControlPanel extends JPanel {
             VideoEditPanel vepA = VideoToolControlPanel.this.videoToolVideoPanel.getVideoSubPanel('A');
             VideoEditPanel vepB = VideoToolControlPanel.this.videoToolVideoPanel.getVideoSubPanel('B');
             String filepath = chooser.getSelectedFile().getAbsolutePath();
+
             if (box.getSelectedItem() == "Import Primary Video") {
                 vepA.loadVideo(filepath);
             } else if (box.getSelectedItem() == "Import Secondary Video") {
@@ -130,7 +130,7 @@ public class VideoToolControlPanel extends JPanel {
     private class SaveButtonListener implements ActionListener {
         @Override
         public void actionPerformed(ActionEvent e) {
-            currentHyperlinkPath = hyperlinkPanel.saveHyperlinks(videoToolVideoPanel.getVideoSubPanel('A').getVideoPath());
+            currentHyperlinkPath = hyperlinkPanel.saveHyperlinks(videoToolVideoPanel.getVideoSubPanel('A').getVideoName());
         }
     }
 
@@ -163,10 +163,14 @@ public class VideoToolControlPanel extends JPanel {
 
             // connect hyperlink to secondary video
             if (!hyperlinkPanel.isConnected(videoToolVideoPanel.getCurrentLink())) {
-                int primaryStartFrame = hyperlinkPanel.getHyperlink(videoToolVideoPanel.getCurrentLink()).getPrimaryStartFrame();
+                //int primaryStartFrame = hyperlinkPanel.getHyperlink(videoToolVideoPanel.getCurrentLink()).getPrimaryStartFrame();
+                //int secondaryStartFrame = hyperlinkPanel.getHyperlink(videoToolVideoPanel.getCurrentLink()).getSecondaryStartFrame();
+                int primaryEndFrame = videoToolVideoPanel.getVideoSubPanel('A').getCurrentFrameNumber();
                 int secondaryStartFrame = videoToolVideoPanel.getVideoSubPanel('B').getCurrentFrameNumber();
+
                 JFrame window = (JFrame) SwingUtilities.getRoot(VideoToolControlPanel.this);
-                if (hyperlinkPanel.setFrames(currentLink, primaryStartFrame , secondaryStartFrame) == 0) {
+
+                if (hyperlinkPanel.setFrames(currentLink, primaryEndFrame, secondaryStartFrame) == 0) {
                     JOptionPane.showMessageDialog(window, "Hyperlink start frame cannot be less than the end frame!",
                             "Error", JOptionPane.ERROR_MESSAGE);
                     triggerListListener = true;
@@ -253,8 +257,10 @@ public class VideoToolControlPanel extends JPanel {
             return false;
         }
 
-        JFrame window = (JFrame) VideoToolControlPanel.this.getParent();
-        return (JOptionPane.showConfirmDialog(window, "Do you want to stop editing the current" +
+        //error shows up saying cannot cast JPanel to JFrame
+        //JFrame window = (JFrame) VideoToolControlPanel.this.getParent();
+        return (JOptionPane.showConfirmDialog(VideoToolControlPanel.this.getParent(),
+                "Do you want to stop editing the current" +
                 " hyperlink: " + videoToolVideoPanel.getCurrentLink() + "?") == JOptionPane.OK_OPTION);
     }
 
@@ -263,8 +269,9 @@ public class VideoToolControlPanel extends JPanel {
         if (linkName == null) {
             return null;
         } else if (linkName.equals("")) {
-            JFrame window = (JFrame) VideoToolControlPanel.this.getParent();
-            JOptionPane.showMessageDialog(window, "Invalid link name.", "Error", JOptionPane.ERROR_MESSAGE);
+            //JFrame window = (JFrame) VideoToolControlPanel.this.getParent();
+            JOptionPane.showMessageDialog(VideoToolControlPanel.this.getParent(),
+                    "Invalid link name.", "Error", JOptionPane.ERROR_MESSAGE);
             return null;
         }
 
@@ -298,8 +305,8 @@ public class VideoToolControlPanel extends JPanel {
         VideoEditPanel vepA = videoToolVideoPanel.getVideoSubPanel('A');
         VideoEditPanel vepB = videoToolVideoPanel.getVideoSubPanel('B');
         if (!vepA.isVideoSet() || !vepB.isVideoSet()) {
-            JFrame window = (JFrame) VideoToolControlPanel.this.getParent();
-            JOptionPane.showMessageDialog(window,
+            //JFrame window = (JFrame) VideoToolControlPanel.this.getParent();
+            JOptionPane.showMessageDialog(VideoToolControlPanel.this.getParent(),
                     "Need to load videos first.",
                     "Error",
                     JOptionPane.ERROR_MESSAGE);
@@ -313,7 +320,7 @@ public class VideoToolControlPanel extends JPanel {
         if (currentLinkExists && !currentLinkConnected && !cancelHyperlinkEdit()) {
             triggerListListener = true;
             return;
-        } else if (currentLinkExists && !currentLinkConnected && cancelHyperlinkEdit()) {
+        } else {
             linkList.removeItem(currentLink);
             hyperlinkPanel.removeLink(currentLink);
             videoToolVideoPanel.setCurrentLink("");

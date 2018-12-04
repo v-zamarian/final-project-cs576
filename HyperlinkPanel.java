@@ -158,6 +158,35 @@ public class HyperlinkPanel extends JPanel {
         return outputFile;
     }
 
+    //sets the drawing rectangle to the params of the current hyperlink to draw
+    void setHyperlinkBox(Map.Entry<String, Rectangle2D[]> entry){
+        String key = entry.getKey();
+        Rectangle2D[] points = entry.getValue();
+
+        if (!isConnected(key)) {
+            double newX = points[0].getCenterX();
+            double newY = points[0].getCenterY();
+
+            newX = Math.min(points[1].getCenterX(), newX); //not putting points[0] here since repaint lag occurs
+            newY = Math.min(points[1].getCenterY(), newY);
+
+            s.setRect(newX, newY, Math.abs(points[1].getCenterX() - points[0].getCenterX()),
+                    Math.abs(points[1].getCenterY() - points[0].getCenterY()));
+        }else{
+            Hyperlink currLink = hyperlinks.get(key);
+
+            int frameDiff = videoPanel.getCurrentFrameNumber() - currLink.startFrame;
+
+            double cornerX = currLink.corner.x + (frameDiff * currLink.cornerXRate);
+            double cornerY = currLink.corner.y + (frameDiff * currLink.cornerYRate);
+
+            double width = currLink.boxWidth + (frameDiff * currLink.widthRate);
+            double height = currLink.boxHeight + (frameDiff * currLink.heightRate);
+
+            s.setRect(cornerX, cornerY, width, height);
+        }
+    }
+
     @Override
     protected void paintComponent(Graphics g){
         super.paintComponent(g);
@@ -174,7 +203,7 @@ public class HyperlinkPanel extends JPanel {
             Rectangle2D[] points = entry.getValue();
 
             //after connecting the hyperlink, only draw the box on the frames it was linked to
-            if (hyperlinks.get(key).endFrame != -1) {
+            if (isConnected(key)) {
                 if (videoPanel.getCurrentFrameNumber() < hyperlinks.get(key).startFrame ||
                         videoPanel.getCurrentFrameNumber() > hyperlinks.get(key).endFrame) {
                     continue;
@@ -194,14 +223,7 @@ public class HyperlinkPanel extends JPanel {
                 g2.setStroke(new BasicStroke(2));
             }
 
-            double newX = points[0].getCenterX();
-            double newY = points[0].getCenterY();
-
-            newX = Math.min(points[1].getCenterX(), newX); //not putting points[0] here since repaint lag occurs
-            newY = Math.min(points[1].getCenterY(), newY);
-
-            s.setRect(newX, newY, Math.abs(points[1].getCenterX() - points[0].getCenterX()),
-                    Math.abs(points[1].getCenterY() - points[0].getCenterY() ));
+            setHyperlinkBox(entry);
 
             g2.draw(s);
         }
