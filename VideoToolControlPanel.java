@@ -203,7 +203,7 @@ public class VideoToolControlPanel extends JPanel {
             try {
                 final int START_FRAME = 1;
                 System.out.println("VIDEO TO PLAY: " + videoToPlayPath);
-                (new VideoPlaybackTool(videoToPlayPath, START_FRAME, false)).displayGUI();
+                (new VideoPlaybackTool(videoToPlayPath, START_FRAME, false, true)).displayGUI();
             } catch (Exception ex) {
                 System.out.println("DEBUG: User cancelled operation");
             }
