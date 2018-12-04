@@ -163,7 +163,9 @@ public class VideoToolControlPanel extends JPanel {
 
             // have user choose video of allowed type or cancel
             //chooser.setFileFilter(new FileNameExtensionFilter(".avi", "avi"));
-            int value = chooser.showOpenDialog(null);
+            JFrame window = (JFrame) SwingUtilities.getRoot(VideoToolControlPanel.this);
+
+            int value = chooser.showOpenDialog(window);
             if (value != JFileChooser.APPROVE_OPTION) {
                 return;
             }
@@ -393,10 +395,12 @@ public class VideoToolControlPanel extends JPanel {
     }
 
     private String chooseLinkName() {
+        JFrame window = (JFrame) SwingUtilities.getRoot(VideoToolControlPanel.this);
+
         JLabel message = new JLabel("Enter a name for the hyperlink: ");
         message.setFont(controlsFont);
 
-        String linkName = JOptionPane.showInputDialog(message);
+        String linkName = JOptionPane.showInputDialog(window, message);
         if (linkName == null) {
             return null;
         }
@@ -405,7 +409,7 @@ public class VideoToolControlPanel extends JPanel {
         linkName = linkName.replaceAll("[^A-Za-z0-9 ]", "");
 
         if (linkName.equals("")) {
-            JFrame window = (JFrame) SwingUtilities.getRoot(VideoToolControlPanel.this);
+
             message.setText("Invalid link name.");
             message.setFont(controlsFont);
 
@@ -417,13 +421,15 @@ public class VideoToolControlPanel extends JPanel {
     }
 
     private Color chooseLinkColor() {
+        JFrame window = (JFrame) SwingUtilities.getRoot(VideoToolControlPanel.this);
+
         JColorChooser colorPanel = new JColorChooser(Color.RED);
         for (AbstractColorChooserPanel p : colorPanel.getChooserPanels()){
             if (!p.getDisplayName().equals("Swatches")){
                 colorPanel.removeChooserPanel(p);
             }
         }
-        if (JOptionPane.showConfirmDialog(null, colorPanel, "Choose the box color",
+        if (JOptionPane.showConfirmDialog(window, colorPanel, "Choose the box color",
                 JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE, null) == JOptionPane.OK_OPTION){
             return colorPanel.getColor();
         }
@@ -469,20 +475,31 @@ public class VideoToolControlPanel extends JPanel {
             }
         }
 
+        triggerListListener = true;
+
         // Finalize link settings and add
         String linkName = chooseLinkName();
         if (linkName == null) {
-            triggerListListener = true;
+            return;
+        }
+
+        if (hyperlinkPanel.linkExists(linkName)){
+            JFrame window = (JFrame) SwingUtilities.getRoot(VideoToolControlPanel.this);
+            JLabel message = new JLabel("A link with the name \"" + linkName + "\" already exisits");
+            message.setFont(controlsFont);
+
+            JOptionPane.showMessageDialog(window, message, "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
         Color linkColor = chooseLinkColor();
         if (linkColor == null) {
-            triggerListListener = true;
             return;
         }
 
+        triggerListListener = false;
         int primaryStartFrame = vepA.getCurrentFrameNumber();
+
         hyperlinkPanel.addHyperlink(linkName, vepA.getVideoPath(), vepB.getVideoPath(),
                 primaryStartFrame, linkColor);
         linkList.addItem(linkName);

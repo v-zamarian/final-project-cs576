@@ -45,6 +45,10 @@ public class HyperlinkPanel extends JPanel {
         repaint();
     }
 
+    boolean linkExists(String linkName){
+        return hyperlinks.containsKey(linkName);
+    }
+
     void renameHyperlink(String oldName, String newName){
         hyperlinks.put(newName, new Hyperlink(hyperlinks.get(oldName)));
         hyperlinkBoxes.put(newName, hyperlinkBoxes.get(oldName));
