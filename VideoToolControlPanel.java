@@ -157,6 +157,7 @@ public class VideoToolControlPanel extends JPanel {
             // set current directory to user's system's directory
             JFileChooser chooser = new JFileChooser();
             chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+            chooser.setDialogTitle("Choose video directory");
 
             String startingDir = System.getProperty("user.dir");
             chooser.setCurrentDirectory(new File(startingDir));
@@ -164,6 +165,32 @@ public class VideoToolControlPanel extends JPanel {
             // have user choose video of allowed type or cancel
             //chooser.setFileFilter(new FileNameExtensionFilter(".avi", "avi"));
             JFrame window = (JFrame) SwingUtilities.getRoot(VideoToolControlPanel.this);
+            VideoToolVideoPanel vtvp = VideoToolControlPanel.this.videoToolVideoPanel;
+
+            VideoEditPanel vepB = VideoToolControlPanel.this.videoToolVideoPanel.getVideoSubPanel('B');
+            VideoEditPanel vepA = VideoToolControlPanel.this.videoToolVideoPanel.getVideoSubPanel('A');
+
+            boolean newLoad = false;
+
+            if (box.getSelectedItem() == "Import Primary Video") {
+                if (vepA.isVideoSet() && !hyperlinkPanel.isListEmpty()) {
+                    JLabel message = new JLabel("Hyperlinks are being edited for this file, " +
+                            "do you really want to switch to a new file?");
+                    message.setFont(controlsFont);
+
+                    if (JOptionPane.showConfirmDialog(window, message) == JOptionPane.OK_OPTION) {
+                        message.setText("Do you want to save the current file?");
+
+                        if (JOptionPane.showConfirmDialog(window, message) == JOptionPane.OK_OPTION){
+                            currentHyperlinkPath = hyperlinkPanel.saveHyperlinks(vepA.getVideoName());
+                        }
+
+                        newLoad = true;
+                    } else {
+                        return;
+                    }
+                }
+            }
 
             int value = chooser.showOpenDialog(window);
             if (value != JFileChooser.APPROVE_OPTION) {
@@ -171,14 +198,31 @@ public class VideoToolControlPanel extends JPanel {
             }
 
             // load video based on chosen option
-            VideoEditPanel vepA = VideoToolControlPanel.this.videoToolVideoPanel.getVideoSubPanel('A');
-            VideoEditPanel vepB = VideoToolControlPanel.this.videoToolVideoPanel.getVideoSubPanel('B');
             String filepath = chooser.getSelectedFile().getAbsolutePath();
 
             if (box.getSelectedItem() == "Import Primary Video") {
-                vepA.loadVideo(filepath);
+                if (vepA.loadVideo(filepath)) {
+                    if (newLoad){ //only clear hyperlinks if a new primary video will actually be loaded
+                        triggerListListener = false;
+
+                        hyperlinkPanel.removeAllLinks();
+                        linkList.removeAllItems();
+                        linkList.addItem("-");
+                        vtvp.setCurrentLink("");
+
+                        triggerListListener = true;
+                    }
+
+                    VideoToolSliderPanel sliderA = vtvp.getSliderSubPanel('A');
+                    sliderA.getSliderFrameField().setText(String.format("%04d", 1));
+                    sliderA.getSlider().setValue(1);
+                }
             } else if (box.getSelectedItem() == "Import Secondary Video") {
-                vepB.loadVideo(filepath);
+                if(vepB.loadVideo(filepath)) {
+                    VideoToolSliderPanel sliderB = vtvp.getSliderSubPanel('B');
+                    sliderB.getSliderFrameField().setText(String.format("%04d", 1));
+                    sliderB.getSlider().setValue(1);
+                }
             }
         }
     }
@@ -485,7 +529,7 @@ public class VideoToolControlPanel extends JPanel {
 
         if (hyperlinkPanel.linkExists(linkName)){
             JFrame window = (JFrame) SwingUtilities.getRoot(VideoToolControlPanel.this);
-            JLabel message = new JLabel("A link with the name \"" + linkName + "\" already exisits");
+            JLabel message = new JLabel("A link with the name \"" + linkName + "\" already exists");
             message.setFont(controlsFont);
 
             JOptionPane.showMessageDialog(window, message, "Error", JOptionPane.ERROR_MESSAGE);
