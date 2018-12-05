@@ -27,10 +27,12 @@ public class VideoToolVideoPanel extends JPanel {
             JTextField currTextField = (JTextField) e.getSource();
 
             //don't modify if video isn't loaded
-            if (!videoASubPanel.isVideoSet()) {
+            if (!videoASubPanel.isVideoSet() && currTextField.getParent() == sliderASubPanel) {
+                //if a textfield is disabled it shouldn't prevent the other one from being edited
                 return;
             }
-            if (!videoBSubPanel.isVideoSet()){
+
+            if (!videoBSubPanel.isVideoSet() && currTextField.getParent() == sliderBSubPanel){
                 return;
             }
 
@@ -76,7 +78,7 @@ public class VideoToolVideoPanel extends JPanel {
             final JSlider currSlider = (JSlider) e.getSource();
 
             //don't modify if video isn't loaded
-            if (!videoASubPanel.isVideoSet() && currSlider.getParent() == sliderASubPanel){
+            /*if (!videoASubPanel.isVideoSet() && currSlider.getParent() == sliderASubPanel){
                 sliderASubPanel.getSliderFrameField().setEnabled(false);
                 currSlider.setEnabled(false);
             }
@@ -87,7 +89,9 @@ public class VideoToolVideoPanel extends JPanel {
                     sliderBSubPanel.getSliderFrameField().setText("0001");
                     return;
                 }
-            }
+            }*/
+
+            //this point cannot be reached until videos for the respective sliders are loaded
 
 
             if (currSlider.getParent() == sliderASubPanel) {

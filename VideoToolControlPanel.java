@@ -214,12 +214,16 @@ public class VideoToolControlPanel extends JPanel {
                     }
 
                     VideoToolSliderPanel sliderA = vtvp.getSliderSubPanel('A');
+                    sliderA.getSliderFrameField().setEnabled(true);
+                    sliderA.getSlider().setEnabled(true);
                     sliderA.getSliderFrameField().setText(String.format("%04d", 1));
                     sliderA.getSlider().setValue(1);
                 }
             } else if (box.getSelectedItem() == "Import Secondary Video") {
                 if(vepB.loadVideo(filepath)) {
                     VideoToolSliderPanel sliderB = vtvp.getSliderSubPanel('B');
+                    sliderB.getSliderFrameField().setEnabled(true);
+                    sliderB.getSlider().setEnabled(true);
                     sliderB.getSliderFrameField().setText(String.format("%04d", 1));
                     sliderB.getSlider().setValue(1);
                 }
