@@ -48,7 +48,7 @@ public class VideoEditPanel extends JPanel {
         return id;
     }
 
-    public void loadVideo(String videoPath) {
+    public boolean loadVideo(String videoPath) {
         // flush cache and reload instance vars for new video
         //int p = videoPath.lastIndexOf(".");
         //String videoPathName = videoPath.substring(0, p);
@@ -63,23 +63,22 @@ public class VideoEditPanel extends JPanel {
 
         String videoPathName = videoPath + videoPath.substring(p);
 
-        this.video = videoPathName;
-        this.videoPath = videoPathName + ".avi";
-        this.cache = new HashMap<>();
-
         // load first frame
         try {
             BufferedImage firstFrame = readFrame(videoPathName + "0001.rgb");
             this.cache.put(id + video + "1", firstFrame);
             this.frame = firstFrame;
+
+            this.video = videoPathName;
+            this.videoPath = videoPathName + ".avi";
+            this.cache = new HashMap<>();
         } catch (IOException e) {
             //e.printStackTrace();
+            JLabel message = new JLabel("Invalid directory chosen.");
+            message.setFont(new Font("", Font.PLAIN, 16));
 
-            JOptionPane.showMessageDialog(this.getParent(),
-                    "Invalid directory chosen.",
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE);
-            return;
+            JOptionPane.showMessageDialog(this.getParent(), message, "Error", JOptionPane.ERROR_MESSAGE);
+            return false;
         }
 
         this.currentFrameNumber = 1;
@@ -87,6 +86,8 @@ public class VideoEditPanel extends JPanel {
 
         this.getParent().revalidate();
         this.getParent().repaint();
+
+        return true;
     }
 
     public void setFrame(int frameNumber) {

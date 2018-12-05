@@ -114,6 +114,10 @@ public class HyperlinkPanel extends JPanel {
         return hyperlinks.get(name).secondFrame != -1;
     }
 
+    boolean isListEmpty(){
+        return hyperlinks.isEmpty();
+    }
+
     //removes a hyperlink
     void removeLink(String name){
         hyperlinks.remove(name);
@@ -122,14 +126,25 @@ public class HyperlinkPanel extends JPanel {
         repaint();
     }
 
+    //removes all hyperlinks
+    void removeAllLinks(){
+        hyperlinks.clear();
+        hyperlinkBoxes.clear();
+
+        repaint();
+    }
+
     String saveHyperlinks(String originalFile){
         //select directory to save hyperlink file to
         //output file name is the primary video's name.hyp
+        JFrame window = (JFrame) SwingUtilities.getRoot(this);
+
         JFileChooser chooser = new JFileChooser(System.getProperty("user.dir"));
         chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        chooser.setDialogTitle("Choose directory to save file to");
 
         String outputFile;
-        if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION){
+        if (chooser.showOpenDialog(window) == JFileChooser.APPROVE_OPTION){
             // Get filename depending on OS file structure
             if (System.getProperty("os.name").startsWith("Windows")) {
                 originalFile = originalFile.substring(originalFile.lastIndexOf("\\"));
@@ -150,8 +165,10 @@ public class HyperlinkPanel extends JPanel {
             FileWriter out = new FileWriter(outputFile);
 
             for (Map.Entry<String, Hyperlink> entry : hyperlinks.entrySet()) {
-                out.write(entry.getValue().toString());
-                out.write("\r\n");
+                if (isConnected(entry.getKey())) { //only save connected links
+                    out.write(entry.getValue().toString());
+                    out.write("\r\n");
+                }
             }
 
             out.close();
