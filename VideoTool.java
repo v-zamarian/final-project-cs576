@@ -52,7 +52,8 @@ public class VideoTool extends JFrame {
         contentPane.add(controlPanel);
 
         // Last display steps
-        this.setSize(800, 550);
+        this.pack();
+        this.setResizable(false);
         this.setVisible(true);
     }
 

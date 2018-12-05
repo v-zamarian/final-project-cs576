@@ -28,17 +28,10 @@ public class VideoToolVideoPanel extends JPanel {
 
             //don't modify if video isn't loaded
             if (!videoASubPanel.isVideoSet()) {
-                if (currTextField.getParent() == sliderASubPanel) {
-                    currTextField.setText("0001");
-                    return;
-                }
+                return;
             }
-
             if (!videoBSubPanel.isVideoSet()){
-                if (currTextField.getParent() == sliderBSubPanel) {
-                    currTextField.setText("0001");
-                    return;
-                }
+                return;
             }
 
 
@@ -83,15 +76,12 @@ public class VideoToolVideoPanel extends JPanel {
             final JSlider currSlider = (JSlider) e.getSource();
 
             //don't modify if video isn't loaded
-            if (!videoASubPanel.isVideoSet()){
-                if (currSlider.getParent() == sliderASubPanel){
-                    currSlider.setValue(1);
-                    sliderASubPanel.getSliderFrameField().setText("0001");
-                    return;
-                }
+            if (!videoASubPanel.isVideoSet() && currSlider.getParent() == sliderASubPanel){
+                sliderASubPanel.getSliderFrameField().setEnabled(false);
+                currSlider.setEnabled(false);
             }
 
-            if (!videoBSubPanel.isVideoSet()){
+            if (!videoBSubPanel.isVideoSet() && currSlider.getParent() == sliderBSubPanel){
                 if (currSlider.getParent() == sliderBSubPanel){
                     currSlider.setValue(1);
                     sliderBSubPanel.getSliderFrameField().setText("0001");
@@ -227,22 +217,24 @@ public class VideoToolVideoPanel extends JPanel {
             // create and add hyperlinkPanel to videoASubPanel
             HyperlinkPanel hyperlinkPanel = new HyperlinkPanel();
             hyperlinkPanel.setPreferredSize(new Dimension(IMG_WIDTH, IMG_HEIGHT));
+            hyperlinkPanel.setBorder(new EmptyBorder(-5, -5, -5,-5));
             hyperlinkPanel.setOpaque(false);
             videoASubPanel.setHyperlinkPanel(hyperlinkPanel);
 
-            //JLabel img = new JLabel(new ImageIcon(videoASubPanel.getFrame()));
             JLabel img = new JLabel();
             videoASubPanel.add(img);
+            videoASubPanel.setPreferredSize(new Dimension(IMG_WIDTH, IMG_HEIGHT));
+            videoASubPanel.setMinimumSize(new Dimension(IMG_WIDTH, IMG_HEIGHT));
             videoASubPanel.setBorder(new EmptyBorder(-5, -5, -5,-5));
-            videoASubPanel.setPreferredSize(new Dimension(352, 288));
             this.add(videoASubPanel.getHyperlinkPanel(), c);
             this.add(videoASubPanel, c);
         } else {
-            //JLabel img = new JLabel(new ImageIcon(videoBSubPanel.getFrame()));
             JLabel img = new JLabel();
+            img.setPreferredSize(new Dimension(IMG_WIDTH, IMG_HEIGHT));
             videoBSubPanel.add(img);
+            videoBSubPanel.setPreferredSize(new Dimension(IMG_WIDTH, IMG_HEIGHT));
+            videoBSubPanel.setMinimumSize(new Dimension(IMG_WIDTH, IMG_HEIGHT));
             videoBSubPanel.setBorder(new EmptyBorder(-5, -5, -5,-5));
-            videoBSubPanel.setPreferredSize(new Dimension(352, 288));
             this.add(videoBSubPanel, c);
         }
     }
@@ -264,12 +256,16 @@ public class VideoToolVideoPanel extends JPanel {
             sliderASubPanel.setSliderFrameField(targetField);
             sliderASubPanel.add(targetField);
             sliderASubPanel.add(targetSlider);
+            sliderASubPanel.getSliderFrameField().setEnabled(false);
+            sliderASubPanel.getSlider().setEnabled(false);
             this.add(sliderASubPanel, c);
         } else {
             sliderBSubPanel.setSlider(targetSlider);
             sliderBSubPanel.setSliderFrameField(targetField);
             sliderBSubPanel.add(targetField);
             sliderBSubPanel.add(targetSlider);
+            sliderBSubPanel.getSliderFrameField().setEnabled(false);
+            sliderBSubPanel.getSlider().setEnabled(false);
             this.add(sliderBSubPanel, c);
         }
     }
