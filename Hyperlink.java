@@ -83,28 +83,6 @@ public class Hyperlink {
         boxColor = new Color(Integer.parseInt(properties[14]),
                              Integer.parseInt(properties[15]),
                              Integer.parseInt(properties[16]));
-//        Pattern pattern = Pattern.compile("(\\w+), (\\\\[a-zA-z0-9_ -]+)+, (\\d+), (\\d+), (\\\\[a-zA-z0-9_ -]+)+, " +
-//                "(\\d+), (\\d+), (\\d+), (\\d+), (\\d+), (-?\\d.\\d+), (-?\\d.\\d+), (-?\\d.\\d+), (-?\\d.\\d+), " +
-//                "(\\d+), (\\d+), (\\d+)");
-//        Matcher matcher = pattern.matcher(linkString);
-//
-//        if (matcher.matches()){
-//            linkName = matcher.group(1);
-//            primaryName = matcher.group(2);
-//            startFrame = Integer.parseInt(matcher.group(3));
-//            endFrame = Integer.parseInt(matcher.group(4));
-//            secondaryName = matcher.group(5);
-//            secondFrame = Integer.parseInt(matcher.group(6));
-//            corner = new Point(Integer.parseInt(matcher.group(7)), Integer.parseInt(matcher.group(8)));
-//            boxWidth = Integer.parseInt(matcher.group(9));
-//            boxHeight = Integer.parseInt(matcher.group(10));
-//            cornerXRate = Float.parseFloat(matcher.group(11));
-//            cornerYRate = Float.parseFloat(matcher.group(12));
-//            widthRate = Float.parseFloat(matcher.group(13));
-//            heightRate = Float.parseFloat(matcher.group(14));
-//            boxColor = new Color(Integer.parseInt(matcher.group(15)), Integer.parseInt(matcher.group(16)),
-//                    Integer.parseInt(matcher.group(17)));
-//        }
     }
 
     //these values will define the hyperlink box to be displayed when playing the hyperlinked video

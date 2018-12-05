@@ -21,7 +21,6 @@ public class VideoPlaybackTool extends JFrame {
     private GridBagConstraints c;
     private Thread playbackThread;
     private int currentFrameNumber;
-    private String hyperlinkPath;
     private HyperlinkVideoPanel hyperlinkVideoPanel;
     private boolean pauseRequested;
     private boolean stopRequested;
@@ -31,7 +30,6 @@ public class VideoPlaybackTool extends JFrame {
 
     final private int FRAMES_PER_SECOND = 30;
     final private int TOTAL_FRAMES = 9000;
-    final private int DELAY_THRESHOLD = 5;
 
     private class PlaybackListener implements ActionListener {
         @Override
@@ -67,14 +65,12 @@ public class VideoPlaybackTool extends JFrame {
         this.audio = new AudioWrapper(basePathName);
         if (fromLink) {
             int audioFrame = (frameNumber*audio.getAudio().getFrameLength())/TOTAL_FRAMES;
-            System.out.println("AUDIO FRAME: " + audioFrame);
             audio.getAudio().setFramePosition(audioFrame);
         }
 
         this.c = new GridBagConstraints();
         this.controlPanel = new VideoPlaybackControlPanel();
         this.videoImageLabel = new JLabel(new ImageIcon(this.video.getFrame(frameNumber)));
-        System.out.println("VIDEO FRAME NUMBER: " + frameNumber);
         this.infoPanel = new JPanel();
         this.hyperlinkVideoPanel = new HyperlinkVideoPanel();
 
