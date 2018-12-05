@@ -30,6 +30,7 @@ public class VideoPlaybackTool extends JFrame {
     private boolean firstVideo; //if this is false, don't load any hyperlink file
 
     final private int FRAMES_PER_SECOND = 30;
+    final private int AUDIO_SAMPLE_RATE = 44100;
     final private int TOTAL_FRAMES = 9000;
 
     private class PlaybackListener implements ActionListener {
@@ -65,7 +66,8 @@ public class VideoPlaybackTool extends JFrame {
         String basePathName = filepath.substring(0, p);
         this.audio = new AudioWrapper(basePathName);
         if (fromLink) {
-            int audioFrame = (frameNumber*audio.getAudio().getFrameLength())/TOTAL_FRAMES;
+            double videoTimeInSeconds = frameNumber/30.0;
+            int audioFrame = (int) videoTimeInSeconds*AUDIO_SAMPLE_RATE;
             audio.getAudio().setFramePosition(audioFrame);
         }
 

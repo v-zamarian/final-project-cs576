@@ -20,13 +20,6 @@ public class AudioWrapper {
     }
 
     public void play() {
-        if (!audio.isOpen()) {
-            try {
-                audio.open(audioStream);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
         audio.start();
     }
 
