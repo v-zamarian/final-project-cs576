@@ -71,7 +71,11 @@ public class VideoPlaybackTool extends JFrame {
                 String linkPath = video.getVideoDirectory() + video.getVideoName();
                 this.video = new Video(hyperlinkVideoPanel.loadLinks(linkPath));
             } else {
-                this.video = new Video(hyperlinkVideoPanel.loadLinks(filepath));
+                String fp = hyperlinkVideoPanel.loadLinks(filepath);
+                if (fp.equals("")) {
+                    throw new CancellationException("User cancelled operation");
+                }
+                this.video = new Video(fp);
             }
             if (!fromLink && video.getFilepath().equals("")) {
                 throw new CancellationException("User cancelled operation");

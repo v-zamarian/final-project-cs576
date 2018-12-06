@@ -252,7 +252,7 @@ public class VideoToolControlPanel extends JPanel {
                 final int START_FRAME = 1;
                 (new VideoPlaybackTool(null, START_FRAME, false, true)).displayGUI();
             } catch (CancellationException ex) {
-                ex.printStackTrace();
+                System.out.println("DEBUG: User cancelled operation");
             }
         }
     }
