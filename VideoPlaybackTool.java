@@ -152,9 +152,13 @@ public class VideoPlaybackTool extends JFrame {
                 long endTime = 0;
 
                 isPlaying = true;
+                stopRequested = false;
+                pauseRequested = false;
+
                 audio.play();
                 while (true) {
                     if (stopRequested) {
+                        stopRequested = false;
                         break;
                     }
 
@@ -223,6 +227,7 @@ public class VideoPlaybackTool extends JFrame {
 
         isPlaying = false;
         pauseRequested = true;
+        stopRequested = false;
         ((JLabel) infoPanel.getComponent(0)).setText("Video Paused at Frame " + currentFrameNumber);
         audio.pause();
     }
@@ -246,7 +251,6 @@ public class VideoPlaybackTool extends JFrame {
     private void resetFrames() {
         isPlaying = false;
         pauseRequested = false;
-        stopRequested = false;
 
         currentFrameNumber = 1;
         videoImageLabel.setIcon(new ImageIcon(video.getFrame(currentFrameNumber)));
