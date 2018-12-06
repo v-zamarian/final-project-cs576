@@ -76,6 +76,8 @@ public class VideoPlaybackTool extends JFrame {
             if (!fromLink && video.getFilepath().equals("")) {
                 throw new CancellationException("User cancelled operation");
             }
+        } else {
+            this.video = new Video(filepath);
         }
 
         // init AudioWrapper object

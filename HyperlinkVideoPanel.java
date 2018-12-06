@@ -54,7 +54,7 @@ public class HyperlinkVideoPanel extends JPanel {
             Scanner in = new Scanner(new File(inputFile));
 
             //first line of file has location of video frames
-            //fileName = in.nextLine();
+            fileName = in.nextLine();
 
             while (in.hasNext()) {
                 String lineString = in.nextLine();
