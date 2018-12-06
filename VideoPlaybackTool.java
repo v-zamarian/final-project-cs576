@@ -66,7 +66,7 @@ public class VideoPlaybackTool extends JFrame {
         String basePathName = filepath.substring(0, p);
         this.audio = new AudioWrapper(basePathName);
         if (fromLink) {
-            double videoTimeInSeconds = frameNumber/30.0;
+            double videoTimeInSeconds = frameNumber/(double) FRAMES_PER_SECOND;
             int audioFrame = (int) videoTimeInSeconds*AUDIO_SAMPLE_RATE;
             audio.getAudio().setFramePosition(audioFrame);
         }
@@ -159,6 +159,10 @@ public class VideoPlaybackTool extends JFrame {
                     }
 
                     if ((endTime - startTime) >= updateTime){
+                        if (currentFrameNumber%FRAMES_PER_SECOND == 0) {
+                            audio.getAudio().setMicrosecondPosition(currentFrameNumber/FRAMES_PER_SECOND*1000*1000);
+                        }
+
                         ((JLabel) infoPanel.getComponent(0)).setText("Playing Frame " + currentFrameNumber);
 
                         if (currentFrameNumber == TOTAL_FRAMES) {
