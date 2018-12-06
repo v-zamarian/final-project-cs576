@@ -100,12 +100,7 @@ public class HyperlinkVideoPanel extends JPanel {
 
             //only draw box in frames it was defined for
             if (currLink.endFrame != -1) {
-                if (currentFrame < currLink.startFrame){
-                    continue;
-                }
-
-                if (currentFrame > currLink.endFrame){ //hyperlink box is no longer needed
-                    currentBoxes.remove(key);
+                if (currentFrame < currLink.startFrame || currentFrame > currLink.endFrame){
                     continue;
                 }
             }
@@ -136,7 +131,8 @@ public class HyperlinkVideoPanel extends JPanel {
                 Rectangle2D box = new Rectangle2D.Double(link.corner.x, link.corner.y, link.boxWidth, link.boxHeight);
 
                 //link is only clickable inside its bounds and if it is currently active
-                if (box.getBounds2D().contains(p.getX(), p.getY()) && currentFrame >= link.startFrame){
+                if (box.getBounds2D().contains(p.getX(), p.getY())
+                        && currentFrame >= link.startFrame && currentFrame <= link.endFrame){
                     return entry.getKey();
                 }
             }
