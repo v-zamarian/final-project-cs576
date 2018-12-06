@@ -20,6 +20,8 @@ public class HyperlinkVideoPanel extends JPanel {
     boolean linksLoaded = false;
     int alpha = 80; //how transparent hyperlink box should be
     int currentFrame;
+    String fileName;
+
     HashMap<String, Hyperlink> hyperlinks = new HashMap<>();
     HashMap<String, Hyperlink> currentBoxes = new HashMap<>();
     Rectangle2D s = new Rectangle2D.Double();
@@ -51,6 +53,9 @@ public class HyperlinkVideoPanel extends JPanel {
         try {
             Scanner in = new Scanner(new File(inputFile));
 
+            //first line of file has location of video frames
+            fileName = in.nextLine();
+
             while (in.hasNext()) {
                 String lineString = in.nextLine();
 
@@ -71,6 +76,10 @@ public class HyperlinkVideoPanel extends JPanel {
         linksLoaded = true;
 
         return videoPath;
+    }
+
+    public String getFileName(){
+        return fileName;
     }
 
     public void setCurrentFrame(int currentFrame) {

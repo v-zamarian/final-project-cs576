@@ -143,6 +143,7 @@ public class HyperlinkPanel extends JPanel {
         chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         chooser.setDialogTitle("Choose directory to save file to");
 
+        String firstFileName = originalFile;
         String outputFile;
         if (chooser.showOpenDialog(window) == JFileChooser.APPROVE_OPTION){
             // Get filename depending on OS file structure
@@ -163,6 +164,9 @@ public class HyperlinkPanel extends JPanel {
         //save hyperlinks to the file
         try{
             FileWriter out = new FileWriter(outputFile);
+
+            out.write(firstFileName);
+            out.write("\r\n");
 
             for (Map.Entry<String, Hyperlink> entry : hyperlinks.entrySet()) {
                 if (isConnected(entry.getKey())) { //only save connected links
