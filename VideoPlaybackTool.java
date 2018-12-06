@@ -197,10 +197,6 @@ public class VideoPlaybackTool extends JFrame {
                             return;
                         }
 
-                        if (currentFrameNumber == 1) {
-                            System.out.println("test");
-                        }
-
                         if (currentFrameNumber == TOTAL_FRAMES) {
                             audio.stop();
                             break;
