@@ -215,6 +215,10 @@ public class VideoPlaybackTool extends JFrame {
     }
 
     public void stop() {
+        if (playbackThread == null) {
+            return;
+        }
+
         isPlaying = false;
         stopRequested = true;
         pauseRequested = false;
