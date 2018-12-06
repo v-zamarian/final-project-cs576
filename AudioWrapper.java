@@ -33,6 +33,7 @@ public class AudioWrapper {
 
     public void stop() {
         audio.stop();
+        audio.flush();
         audio.setFramePosition(0);
     }
 
