@@ -33,8 +33,6 @@ public class HyperlinkVideoPanel extends JPanel {
     }
 
     public String loadLinks(String linkPath){
-        String videoPath = null;
-
         String inputFile;
         if (linkPath != null) {
             inputFile = linkPath;
@@ -61,8 +59,6 @@ public class HyperlinkVideoPanel extends JPanel {
 
                 Hyperlink inLink = new Hyperlink(lineString);
                 Hyperlink inLinkBoxes = new Hyperlink(lineString);
-                videoPath = inLink.primaryName;
-                fileName = videoPath;
                 hyperlinks.put(inLink.linkName, inLink);
                 currentBoxes.put(inLinkBoxes.linkName, inLinkBoxes);
             }
@@ -76,7 +72,7 @@ public class HyperlinkVideoPanel extends JPanel {
 
         linksLoaded = true;
 
-        return videoPath;
+        return fileName;
     }
 
     public String getFileName(){
