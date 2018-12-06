@@ -51,6 +51,7 @@ public class VideoPlaybackTool extends JFrame {
         @Override
         public void windowClosing(WindowEvent e) {
             audio.stop();
+            stopRequested = true;
             e.getWindow().dispose();
         }
     }
