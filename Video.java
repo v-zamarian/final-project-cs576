@@ -3,7 +3,6 @@ import java.awt.image.BufferedImage;
 public class Video {
     private BufferedImage[] frames;
     private String filepath;
-    private String videoPathName;
     private String videoName;
     private String videoDirectory;
 
@@ -11,12 +10,9 @@ public class Video {
 
     public Video(String filepath) {
         this.frames = new BufferedImage[NUM_FRAMES];
+        this.filepath = filepath;
 
-        // get filepath without extension
-        int p = filepath.lastIndexOf(".");
-        this.videoPathName = filepath.substring(0, p);
-        this.filepath = videoPathName;
-
+        int p;
         if (System.getProperty("os.name").startsWith("Windows")) {
             p = filepath.lastIndexOf("\\");
         } else {
@@ -24,17 +20,6 @@ public class Video {
         }
         this.videoName = filepath.substring(p);
         this.videoDirectory = filepath.substring(0, p);
-        System.out.println("VIDEO NAME: " + this.videoName);
-
-        // load frames into buffer
-////        for (int ii = 0; ii < NUM_FRAMES; ii++) {
-////            String frameNumber = String.format("%04d", ii+1);
-////            try {
-////                frames[ii] = VideoEditPanel.readFrame(this.videoPathName + frameNumber + ".rgb");
-////            } catch (IOException e) {
-////                e.printStackTrace();
-////            }
-////        }
     }
 
     public String getFilepath() {

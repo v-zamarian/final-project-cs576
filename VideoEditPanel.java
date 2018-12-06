@@ -70,7 +70,7 @@ public class VideoEditPanel extends JPanel {
             this.frame = firstFrame;
 
             this.video = videoPathName;
-            this.videoPath = videoPathName + ".avi";
+            this.videoPath = videoPathName;
             this.cache = new HashMap<>();
         } catch (IOException e) {
             //e.printStackTrace();

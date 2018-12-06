@@ -30,7 +30,9 @@ public class HyperlinkVideoPanel extends JPanel {
         addMouseMotionListener(mAdapter);
     }
 
-    public boolean loadLinks(String linkPath){
+    public String loadLinks(String linkPath){
+        String videoPath = null;
+
         String inputFile;
         if (linkPath != null) {
             inputFile = linkPath;
@@ -40,7 +42,7 @@ public class HyperlinkVideoPanel extends JPanel {
             if (chooser.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
                 inputFile = chooser.getSelectedFile().getAbsolutePath();
             } else {
-                return false;
+                return "";
             }
         }
 
@@ -54,6 +56,7 @@ public class HyperlinkVideoPanel extends JPanel {
 
                 Hyperlink inLink = new Hyperlink(lineString);
                 Hyperlink inLinkBoxes = new Hyperlink(lineString);
+                videoPath = inLink.primaryName;
                 hyperlinks.put(inLink.linkName, inLink);
                 currentBoxes.put(inLinkBoxes.linkName, inLinkBoxes);
             }
@@ -62,12 +65,12 @@ public class HyperlinkVideoPanel extends JPanel {
         } catch (IOException io) {
             io.printStackTrace();
             System.out.println("ERROR: " + io.getMessage());
-            return false;
+            return "";
         }
 
         linksLoaded = true;
 
-        return true;
+        return videoPath;
     }
 
     public void setCurrentFrame(int currentFrame) {

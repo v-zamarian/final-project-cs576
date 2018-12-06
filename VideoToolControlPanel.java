@@ -7,6 +7,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.io.File;
+import java.util.concurrent.CancellationException;
 
 public class VideoToolControlPanel extends JPanel {
     private JPanel actionSubPanel;
@@ -246,14 +247,12 @@ public class VideoToolControlPanel extends JPanel {
         @Override
         public void actionPerformed(ActionEvent e) {
             VideoEditPanel vepA = VideoToolControlPanel.this.videoToolVideoPanel.getVideoSubPanel('A');
-            String videoToPlayPath = vepA.getVideoPath();
 
             try {
                 final int START_FRAME = 1;
-                System.out.println("VIDEO TO PLAY: " + videoToPlayPath);
-                (new VideoPlaybackTool(videoToPlayPath, START_FRAME, false, true)).displayGUI();
-            } catch (Exception ex) {
-                System.out.println("DEBUG: User cancelled operation");
+                (new VideoPlaybackTool(null, START_FRAME, false, true)).displayGUI();
+            } catch (CancellationException ex) {
+                ex.printStackTrace();
             }
         }
     }

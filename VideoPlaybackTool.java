@@ -11,6 +11,7 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Scanner;
+import java.util.concurrent.CancellationException;
 
 public class VideoPlaybackTool extends JFrame {
     private Video video;
@@ -56,16 +57,29 @@ public class VideoPlaybackTool extends JFrame {
         }
     }
 
-    public VideoPlaybackTool(String filepath, int frameNumber, boolean fromLink, boolean firstVideo) {
+    public VideoPlaybackTool(String filepath, int frameNumber, boolean fromLink, boolean firstVideo) throws CancellationException {
         this.setTitle("Hyperlinked Video Player");
         this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         this.addWindowListener(new WindowCloseListener());
-        this.video = new Video(filepath);
+
+        this.hyperlinkVideoPanel = new HyperlinkVideoPanel();
+
+        //only the primary video should load a hyperlink file
+        if (firstVideo) {
+            // load links depending on if caller is edit panel or another video playback tool
+            if (fromLink) {
+                String linkPath = video.getVideoDirectory() + video.getVideoName();
+                this.video = new Video(hyperlinkVideoPanel.loadLinks(linkPath));
+            } else {
+                this.video = new Video(hyperlinkVideoPanel.loadLinks(filepath));
+            }
+            if (!fromLink && video.getFilepath().equals("")) {
+                throw new CancellationException("User cancelled operation");
+            }
+        }
 
         // init AudioWrapper object
-        int p = filepath.lastIndexOf(".");
-        String basePathName = filepath.substring(0, p);
-        this.audio = new AudioWrapper(basePathName);
+        this.audio = new AudioWrapper(this.video.getVideoDirectory());
         if (fromLink) {
             double videoTimeInSeconds = frameNumber/(double) FRAMES_PER_SECOND;
             int audioFrame = (int) videoTimeInSeconds*AUDIO_SAMPLE_RATE;
@@ -76,7 +90,6 @@ public class VideoPlaybackTool extends JFrame {
         this.controlPanel = new VideoPlaybackControlPanel();
         this.videoImageLabel = new JLabel(new ImageIcon(this.video.getFrame(frameNumber)));
         this.infoPanel = new JPanel();
-        this.hyperlinkVideoPanel = new HyperlinkVideoPanel();
 
         this.currentFrameNumber = frameNumber;
 
@@ -86,7 +99,7 @@ public class VideoPlaybackTool extends JFrame {
         this.firstVideo = firstVideo;
     }
 
-    public void displayGUI() throws Exception {
+    public void displayGUI() {
         // JFrame initialization
         Container contentPane = this.getContentPane();
         GridBagLayout gridbag = new GridBagLayout();
@@ -242,7 +255,7 @@ public class VideoPlaybackTool extends JFrame {
         repaint();
     }
 
-    private void initVideoPanel(int x, int y) throws Exception {
+    private void initVideoPanel(int x, int y) {
         JPanel videoPlaybackPanel = new JPanel();
         videoPlaybackPanel.setBorder(new EmptyBorder(-5, -5, -5, -5));
         c.gridx = x;
@@ -250,22 +263,6 @@ public class VideoPlaybackTool extends JFrame {
 
         hyperlinkVideoPanel.setOpaque(false);
         hyperlinkVideoPanel.setPreferredSize(new Dimension(352, 288));
-
-        //only the primary video should load a hyperlink file
-        if (firstVideo) {
-            // load links depending on if caller is edit panel or another video playback tool
-            boolean linksLoaded;
-            if (fromLink) {
-                String linkPath = video.getVideoDirectory() + video.getVideoName();
-
-                linksLoaded = hyperlinkVideoPanel.loadLinks(linkPath);
-            } else {
-                linksLoaded = hyperlinkVideoPanel.loadLinks(null);
-            }
-            if (!fromLink && !linksLoaded) {
-                throw new Exception("User cancelled operation");
-            }
-        }
 
         videoPlaybackPanel.add(videoImageLabel);
 

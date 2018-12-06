@@ -7,7 +7,15 @@ public class AudioWrapper {
     private AudioInputStream audioStream;
 
     public AudioWrapper(String baseNamePath) {
-        this.filepath = baseNamePath + ".wav";
+        int p;
+        if (System.getProperty("os.name").startsWith("Windows")) {
+            p = baseNamePath.lastIndexOf("\\");
+        } else {
+            p = baseNamePath.lastIndexOf("/");
+        }
+
+        this.filepath = baseNamePath + baseNamePath.substring(p) + ".wav";
+        System.out.println(this.filepath);
 
         try {
             this.audioStream = AudioSystem.getAudioInputStream(new BufferedInputStream(new FileInputStream(filepath)));
